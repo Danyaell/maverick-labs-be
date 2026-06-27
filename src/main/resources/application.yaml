@@ -1,0 +1,3 @@
+spring:
+  application:
+    name: maverick-labs-be
