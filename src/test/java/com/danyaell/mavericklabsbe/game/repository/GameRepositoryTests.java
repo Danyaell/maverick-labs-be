@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,11 +61,11 @@ class GameRepositoryTests {
     @DisplayName("should_ReturnGameInCorrectOrder_When_FindAllByOrderByReleaseOrderAscIsCalled")
     void should_ReturnGameInCorrectOrder_When_FindAllByOrderByReleaseOrderAscIsCalled() {
         // Arrange
-        gameRepository.save(new Game(null, "MMX5", "Mega Man X5", 5));
-        gameRepository.save(new Game(null, "MMX2", "Mega Man X2", 2));
-        gameRepository.save(new Game(null, "MMX4", "Mega Man X4", 4));
-        gameRepository.save(new Game(null, "MMX1", "Mega Man X1", 1));
-        gameRepository.save(new Game(null, "MMX3", "Mega Man X3", 3));
+        gameRepository.save(new Game(null, "MMX5", "Mega Man X5", 5, new ArrayList<>()));
+        gameRepository.save(new Game(null, "MMX2", "Mega Man X2", 2, new ArrayList<>()));
+        gameRepository.save(new Game(null, "MMX4", "Mega Man X4", 4, new ArrayList<>()));
+        gameRepository.save(new Game(null, "MMX1", "Mega Man X1", 1, new ArrayList<>()));
+        gameRepository.save(new Game(null, "MMX3", "Mega Man X3", 3, new ArrayList<>()));
 
         // Act
         List<Game> result = gameRepository.findAllByOrderByReleaseOrderAsc();
@@ -185,7 +186,7 @@ class GameRepositoryTests {
     @DisplayName("should_PreserveGameDataIntegrity_When_SavedAndRetrieved")
     void should_PreserveGameDataIntegrity_When_SavedAndRetrieved() {
         // Arrange
-        Game originalGame = new Game(null, "TEST_CODE", "Test Game Title", 42);
+        Game originalGame = new Game(null, "TEST_CODE", "Test Game Title", 42, new ArrayList<>());
 
         // Act
         Game savedGame = gameRepository.save(originalGame);
@@ -196,6 +197,44 @@ class GameRepositoryTests {
                 .isNotNull()
                 .extracting(Game::getCode, Game::getTitle, Game::getReleaseOrder)
                 .containsExactly("TEST_CODE", "Test Game Title", 42);
+    }
+
+    @Test
+    @DisplayName("should_FindGameByCodeIgnoreCase_When_ExactCodeIsProvided")
+    void should_FindGameByCodeIgnoreCase_When_ExactCodeIsProvided() {
+        // Arrange
+        gameRepository.save(GameTestFixture.createMegaManX());
+
+        // Act
+        var result = gameRepository.findByCodeIgnoreCase("MMX");
+
+        // Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().getCode()).isEqualTo("MMX");
+    }
+
+    @Test
+    @DisplayName("should_FindGameByCodeIgnoreCase_When_LowercaseCodeIsProvided")
+    void should_FindGameByCodeIgnoreCase_When_LowercaseCodeIsProvided() {
+        // Arrange
+        gameRepository.save(GameTestFixture.createMegaManX());
+
+        // Act
+        var result = gameRepository.findByCodeIgnoreCase("mmx");
+
+        // Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().getCode()).isEqualTo("MMX");
+    }
+
+    @Test
+    @DisplayName("should_ReturnEmptyOptional_When_GameCodeDoesNotExist")
+    void should_ReturnEmptyOptional_When_GameCodeDoesNotExist() {
+        // Act
+        var result = gameRepository.findByCodeIgnoreCase("INVALID");
+
+        // Assert
+        assertThat(result).isEmpty();
     }
 }
 
