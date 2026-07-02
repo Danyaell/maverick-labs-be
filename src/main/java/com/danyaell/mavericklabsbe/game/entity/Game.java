@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "games")
 @Data
@@ -24,4 +27,8 @@ public class Game {
 
     @Column(nullable = false)
     private Integer releaseOrder;
+
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("stageOrder ASC")
+    private List<Stage> stages = new ArrayList<>();
 }

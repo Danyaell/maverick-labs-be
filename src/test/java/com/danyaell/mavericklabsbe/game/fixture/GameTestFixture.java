@@ -9,11 +9,11 @@ import java.util.List;
 public class GameTestFixture {
 
     public static Game createGame(String code, String title, Integer releaseOrder) {
-        return new Game(null, code, title, releaseOrder);
+        return new Game(null, code, title, releaseOrder, new ArrayList<>());
     }
 
     public static Game createGameWithId(Long id, String code, String title, Integer releaseOrder) {
-        return new Game(id, code, title, releaseOrder);
+        return new Game(id, code, title, releaseOrder, new ArrayList<>());
     }
 
     public static Game createMegaManX() {

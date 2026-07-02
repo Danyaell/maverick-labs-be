@@ -1,6 +1,8 @@
 package com.danyaell.mavericklabsbe.game.controller;
 
-import com.danyaell.mavericklabsbe.game.dto.GameSummaryResponse;
+import com.danyaell.mavericklabsbe.common.exception.GlobalExceptionHandler;
+import com.danyaell.mavericklabsbe.game.dto.*;
+import com.danyaell.mavericklabsbe.game.exception.ResourceNotFoundException;
 import com.danyaell.mavericklabsbe.game.fixture.GameTestFixture;
 import com.danyaell.mavericklabsbe.game.service.GameService;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +39,10 @@ class GameControllerTests {
 
     @BeforeEach
     void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new GameController(gameService)).build();
+        GameController gameController = new GameController(gameService);
+        mockMvc = MockMvcBuilders.standaloneSetup(gameController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
@@ -156,5 +161,104 @@ class GameControllerTests {
                 .andExpect(jsonPath("$[1].releaseOrder", is(2)))
                 .andExpect(jsonPath("$[2].releaseOrder", is(3)));
     }
+
+    // Tests for GET /api/v1/games/{gameCode} endpoint
+
+    @Test
+    @DisplayName("should_ReturnStatus200_When_GetGameDetailWithValidCode")
+    void should_ReturnStatus200_When_GetGameDetailWithValidCode() throws Exception {
+        // Arrange
+        GameDetailResponse mockGameDetail = createMockGameDetail("MMX", "Mega Man X", 1);
+        when(gameService.getGameDetailByCode("MMX")).thenReturn(mockGameDetail);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/games/MMX")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("should_ReturnGameDetail_When_GetGameDetailWithValidCode")
+    void should_ReturnGameDetail_When_GetGameDetailWithValidCode() throws Exception {
+        // Arrange
+        GameDetailResponse mockGameDetail = createMockGameDetail("MMX", "Mega Man X", 1);
+        when(gameService.getGameDetailByCode("MMX")).thenReturn(mockGameDetail);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/games/MMX")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is("MMX")))
+                .andExpect(jsonPath("$.title", is("Mega Man X")))
+                .andExpect(jsonPath("$.releaseOrder", is(1)))
+                .andExpect(jsonPath("$.stages", hasSize(1)));
+    }
+
+    @Test
+    @DisplayName("should_NotExposeInternalIds_When_GetGameDetail")
+    void should_NotExposeInternalIds_When_GetGameDetail() throws Exception {
+        // Arrange
+        GameDetailResponse mockGameDetail = createMockGameDetail("MMX", "Mega Man X", 1);
+        when(gameService.getGameDetailByCode("MMX")).thenReturn(mockGameDetail);
+
+        // Act
+        MvcResult result = mockMvc.perform(get("/api/v1/games/MMX")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Assert - verify response doesn't contain 'id' fields
+        String responseBody = result.getResponse().getContentAsString();
+        assertThat(responseBody).doesNotContain("\"id\"");
+    }
+
+    @Test
+    @DisplayName("should_ReturnStatus404_When_GameCodeDoesNotExist")
+    void should_ReturnStatus404_When_GameCodeDoesNotExist() throws Exception {
+        // Arrange
+        when(gameService.getGameDetailByCode("INVALID"))
+                .thenThrow(new ResourceNotFoundException("Game not found: INVALID"));
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/games/INVALID")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.message", is("Game not found: INVALID")));
+    }
+
+    @Test
+    @DisplayName("should_ReturnStatus200_When_GameCodeIsLowercase")
+    void should_ReturnStatus200_When_GameCodeIsLowercase() throws Exception {
+        // Arrange
+        GameDetailResponse mockGameDetail = createMockGameDetail("MMX", "Mega Man X", 1);
+        when(gameService.getGameDetailByCode("mmx")).thenReturn(mockGameDetail);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/games/mmx")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", is("MMX")));
+    }
+
+    // Helper methods
+
+    private GameDetailResponse createMockGameDetail(String code, String title, Integer releaseOrder) {
+        List<StageResponse> stages = List.of(
+                new StageResponse(
+                        "stage-1",
+                        "Stage 1",
+                        1,
+                        "image-key",
+                        new BossResponse("boss-1", "Boss 1", "boss-image"),
+                        new WeaponResponse("weapon-1", "Weapon 1", "Description", "weapon-image"),
+                        new ArrayList<>()
+                )
+        );
+        return new GameDetailResponse(code, title, releaseOrder, stages);
+    }
 }
+
+
+
 
