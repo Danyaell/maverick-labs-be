@@ -1,7 +1,6 @@
 package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,7 +11,6 @@ import java.util.List;
 @Table(name = "games")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Game {
 
     @Id
@@ -31,4 +29,16 @@ public class Game {
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stageOrder ASC")
     private List<Stage> stages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Weapon> weapons = new ArrayList<>();
+
+    public Game(Long id, String code, String title, Integer releaseOrder, List<Stage> stages) {
+        this.id = id;
+        this.code = code;
+        this.title = title;
+        this.releaseOrder = releaseOrder;
+        this.stages = stages;
+        this.weapons = new ArrayList<>();
+    }
 }

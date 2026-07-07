@@ -8,16 +8,16 @@ INSERT INTO games (code, title, release_order) VALUES
 ('MMX4', 'Mega Man X4', 4);
 
 -- INSERT DATA INTO TABLE stages (for MMX)
-INSERT INTO stages (game_id, slug, name, stage_order, image_asset_key) VALUES
-(1, 'chill-penguin', 'Chill Penguin Stage', 1, 'mmx.stage.chill-penguin'),
-(1, 'spark-mandrill', 'Spark Mandrill Stage', 2, 'mmx.stage.spark-mandrill'),
-(1, 'storm-eagle', 'Storm Eagle Stage', 3, 'mmx.stage.storm-eagle');
+INSERT INTO stages (game_id, slug, name, stage_order, base_difficulty, estimated_minutes, image_asset_key) VALUES
+(1, 'chill-penguin', 'Chill Penguin Stage', 1, 4, 8, 'mmx.stage.chill-penguin'),
+(1, 'spark-mandrill', 'Spark Mandrill Stage', 2, 8, 11, 'mmx.stage.spark-mandrill'),
+(1, 'storm-eagle', 'Storm Eagle Stage', 3, 6, 10, 'mmx.stage.storm-eagle');
 
 -- INSERT DATA INTO TABLE bosses
-INSERT INTO bosses (stage_id, slug, name, image_asset_key) VALUES
-(1, 'chill-penguin', 'Chill Penguin', 'mmx.boss.chill-penguin'),
-(2, 'spark-mandrill', 'Spark Mandrill', 'mmx.boss.spark-mandrill'),
-(3, 'storm-eagle', 'Storm Eagle', 'mmx.boss.storm-eagle');
+INSERT INTO bosses (stage_id, slug, name, image_asset_key, weakness_weapon) VALUES
+(1, 'chill-penguin', 'Chill Penguin', 'mmx.boss.chill-penguin', 'fire-wave'),
+(2, 'spark-mandrill', 'Spark Mandrill', 'mmx.boss.spark-mandrill', 'shotgun-ice'),
+(3, 'storm-eagle', 'Storm Eagle', 'mmx.boss.storm-eagle', 'chameleon-sting');
 
 -- INSERT DATA INTO TABLE weapons
 INSERT INTO weapons (game_id, obtained_from_stage_id, slug, name, description, image_asset_key) VALUES
@@ -32,3 +32,6 @@ INSERT INTO collectibles (stage_id, slug, name, type, description, image_asset_k
 (2, 'spark-mandrill-sub-tank', 'Sub Tank', 'SUB_TANK', 'Provides extra health reserve.', 'mmx.collectible.sub-tank', 1),
 (3, 'storm-eagle-armor', 'Armor Upgrade', 'ARMOR_UPGRADE', 'Increases defense.', 'mmx.collectible.armor-upgrade', 1);
 
+-- INSERT DATA INTO TABLE collectible_requirements
+INSERT INTO collectible_requirements (collectible_id, requirement_type, required_key) VALUES
+(3, 'COLLECTIBLE', 'leg-upgrade-capsule');

@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS stages (
     slug VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     stage_order INT NOT NULL,
+    base_difficulty INT NOT NULL,
+    estimated_minutes INT NOT NULL,
     image_asset_key VARCHAR(255),
     CONSTRAINT fk_stage_game FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
 );
@@ -26,6 +28,7 @@ CREATE TABLE IF NOT EXISTS bosses (
     slug VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     image_asset_key VARCHAR(255),
+    weakness_weapon VARCHAR(100),
     CONSTRAINT fk_boss_stage FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
 );
 
@@ -55,3 +58,11 @@ CREATE TABLE IF NOT EXISTS collectibles (
     CONSTRAINT fk_collectible_stage FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
 );
 
+-- CREATE TABLE collectible_requirements
+CREATE TABLE IF NOT EXISTS collectible_requirements (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    collectible_id BIGINT NOT NULL,
+    requirement_type VARCHAR(50) NOT NULL,
+    required_key VARCHAR(100) NOT NULL,
+    CONSTRAINT fk_collectible_requirement_collectible FOREIGN KEY (collectible_id) REFERENCES collectibles(id) ON DELETE CASCADE
+);
