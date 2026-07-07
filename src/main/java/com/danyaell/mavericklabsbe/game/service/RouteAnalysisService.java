@@ -4,9 +4,13 @@ import com.danyaell.mavericklabsbe.game.dto.*;
 import com.danyaell.mavericklabsbe.game.entity.*;
 import com.danyaell.mavericklabsbe.game.exception.InvalidRouteException;
 import com.danyaell.mavericklabsbe.game.exception.ResourceNotFoundException;
+import com.danyaell.mavericklabsbe.game.repository.CollectibleRepository;
 import com.danyaell.mavericklabsbe.game.repository.GameRepository;
+import com.danyaell.mavericklabsbe.game.repository.StageRepository;
+import com.danyaell.mavericklabsbe.game.repository.WeaponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,22 +27,30 @@ public class RouteAnalysisService {
     private static final int BACKTRACK_TIME_PENALTY_PER_WARNING = 5;
     private static final int HARD_BOSS_TIME_PENALTY = 3;
 
+    private final CollectibleRepository collectibleRepository;
     private final GameRepository gameRepository;
+    private final StageRepository stageRepository;
+    private final WeaponRepository weaponRepository;
 
+    @Transactional(readOnly = true)
     public RouteAnalysisResponse analyzeRoute(AnalyzeRouteRequest request) {
-        Game game = gameRepository.findByCodeWithRouteData(request.gameCode())
+        Game game = gameRepository.findByCodeIgnoreCase(request.gameCode())
                 .orElseThrow(() -> new ResourceNotFoundException("Game not found: " + request.gameCode()));
 
-        List<Stage> stages = sortStages(game.getStages());
-        validateRouteRequest(request, game.getCode(), stages);
+        List<Stage> stages = stageRepository.findByGameIdWithBossAndCollectibles(game.getId());
+        preloadCollectibleRequirements(stages);
+        List<Weapon> weapons = weaponRepository.findByGameId(game.getId());
 
-        Map<String, Stage> stageBySlug = stages.stream()
+        List<Stage> sortedStages = sortStages(stages);
+        validateRouteRequest(request, game.getCode(), sortedStages);
+
+        Map<String, Stage> stageBySlug = sortedStages.stream()
                 .collect(Collectors.toMap(
                         stage -> normalize(stage.getSlug()),
                         stage -> stage
                 ));
 
-        Map<Long, String> weaponRewardByStageId = game.getWeapons().stream()
+        Map<Long, String> weaponRewardByStageId = weapons.stream()
                 .filter(weapon -> weapon.getObtainedFromStage() != null && hasText(weapon.getSlug()))
                 .collect(Collectors.toMap(
                         weapon -> weapon.getObtainedFromStage().getId(),
@@ -127,6 +139,19 @@ public class RouteAnalysisService {
                         timePenalty
                 )
         );
+    }
+
+    private void preloadCollectibleRequirements(List<Stage> stages) {
+        List<Long> stageIds = stages.stream()
+                .map(Stage::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (stageIds.isEmpty()) {
+            return;
+        }
+
+        collectibleRepository.findByStageIdInWithRequirements(stageIds);
     }
 
     private void validateRouteRequest(AnalyzeRouteRequest request, String gameCode, List<Stage> gameStages) {

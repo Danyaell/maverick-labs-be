@@ -7,7 +7,10 @@ import com.danyaell.mavericklabsbe.game.dto.RouteWarningType;
 import com.danyaell.mavericklabsbe.game.entity.*;
 import com.danyaell.mavericklabsbe.game.exception.InvalidRouteException;
 import com.danyaell.mavericklabsbe.game.exception.ResourceNotFoundException;
+import com.danyaell.mavericklabsbe.game.repository.CollectibleRepository;
 import com.danyaell.mavericklabsbe.game.repository.GameRepository;
+import com.danyaell.mavericklabsbe.game.repository.StageRepository;
+import com.danyaell.mavericklabsbe.game.repository.WeaponRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +33,15 @@ class RouteAnalysisServiceTests {
     @Mock
     private GameRepository gameRepository;
 
+    @Mock
+    private StageRepository stageRepository;
+
+    @Mock
+    private WeaponRepository weaponRepository;
+
+    @Mock
+    private CollectibleRepository collectibleRepository;
+
     @InjectMocks
     private RouteAnalysisService routeAnalysisService;
 
@@ -37,7 +49,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_AnalyzeValidRoute_When_RequestContainsAllStages")
     void should_AnalyzeValidRoute_When_RequestContainsAllStages() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -58,7 +70,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_ReduceDifficulty_When_WeaknessWasAlreadyAcquired")
     void should_ReduceDifficulty_When_WeaknessWasAlreadyAcquired() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest optimizedRoute = new AnalyzeRouteRequest(
                 "MMX",
@@ -82,7 +94,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_IncreaseBossDifficulty_When_HardBossIsFoughtWithoutWeakness")
     void should_IncreaseBossDifficulty_When_HardBossIsFoughtWithoutWeakness() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -99,7 +111,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_AddBacktrackingWarning_When_CollectibleRequirementIsMissing")
     void should_AddBacktrackingWarning_When_CollectibleRequirementIsMissing() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -124,7 +136,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_NotAddBacktracking_When_CollectibleRequirementWasAlreadyMet")
     void should_NotAddBacktracking_When_CollectibleRequirementWasAlreadyMet() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -142,7 +154,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_RejectRoute_When_StagesAreDuplicated")
     void should_RejectRoute_When_StagesAreDuplicated() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -159,7 +171,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_RejectRoute_When_StageDoesNotBelongToGame")
     void should_RejectRoute_When_StageDoesNotBelongToGame() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -176,7 +188,7 @@ class RouteAnalysisServiceTests {
     @DisplayName("should_RejectRoute_When_HundredPercentRouteIsIncomplete")
     void should_RejectRoute_When_HundredPercentRouteIsIncomplete() {
         Game game = createRouteGame();
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.of(game));
+        mockRouteData(game);
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -192,7 +204,7 @@ class RouteAnalysisServiceTests {
     @Test
     @DisplayName("should_ThrowNotFound_When_GameCodeDoesNotExist")
     void should_ThrowNotFound_When_GameCodeDoesNotExist() {
-        when(gameRepository.findByCodeWithRouteData("MMX")).thenReturn(Optional.empty());
+        when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.empty());
 
         AnalyzeRouteRequest request = new AnalyzeRouteRequest(
                 "MMX",
@@ -233,6 +245,12 @@ class RouteAnalysisServiceTests {
                 createWeapon(2L, game, stormEagle, "storm-tornado")
         ));
         return game;
+    }
+
+    private void mockRouteData(Game game) {
+        when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
+        when(stageRepository.findByGameIdWithBossAndCollectibles(game.getId())).thenReturn(game.getStages());
+        when(weaponRepository.findByGameId(game.getId())).thenReturn(game.getWeapons());
     }
 
     private Stage createStage(Long id, Game game, String slug, int order, int baseDifficulty, int estimatedMinutes) {
