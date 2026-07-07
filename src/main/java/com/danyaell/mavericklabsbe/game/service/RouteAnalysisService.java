@@ -198,7 +198,7 @@ public class RouteAnalysisService {
         return switch (requirement.getRequirementType()) {
             case WEAPON -> acquiredWeapons.contains(requiredKey);
             case COLLECTIBLE -> acquiredCollectibles.contains(requiredKey);
-            case STAGE_CLEARED -> visitedStages.contains(requiredKey);
+            case STAGE_CLEAR -> visitedStages.contains(requiredKey);
             case OTHER -> false;
         };
     }
