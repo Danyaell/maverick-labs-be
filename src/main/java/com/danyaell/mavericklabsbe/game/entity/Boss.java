@@ -1,7 +1,6 @@
 package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,7 +8,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "bosses")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Boss {
 
 	@Id
@@ -28,6 +26,16 @@ public class Boss {
 
 	@Column(name = "image_asset_key")
 	private String imageAssetKey;
-}
 
+	@Column(name = "weakness_weapon")
+	private String weaknessWeapon;
+
+	public Boss(Long id, Stage stage, String slug, String name, String imageAssetKey) {
+		this.id = id;
+		this.stage = stage;
+		this.slug = slug;
+		this.name = name;
+		this.imageAssetKey = imageAssetKey;
+	}
+}
 

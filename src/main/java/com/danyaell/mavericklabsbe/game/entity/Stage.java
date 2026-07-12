@@ -32,6 +32,12 @@ public class Stage {
 	@Column(name = "stage_order", nullable = false)
 	private Integer stageOrder;
 
+	@Column(name = "base_difficulty", nullable = false)
+	private Integer baseDifficulty;
+
+	@Column(name = "estimated_minutes", nullable = false)
+	private Integer estimatedMinutes;
+
 	@Column(name = "image_asset_key")
 	private String imageAssetKey;
 
@@ -41,5 +47,4 @@ public class Stage {
 	@OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Collectible> collectibles = new ArrayList<>();
 }
-
 

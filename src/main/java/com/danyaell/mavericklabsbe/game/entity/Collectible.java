@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "collectibles")
 @Data
@@ -38,6 +41,9 @@ public class Collectible {
 
 	@Column(name = "sort_order")
 	private Integer sortOrder;
-}
 
+	@OneToMany(mappedBy = "collectible", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("id ASC")
+	private List<CollectibleRequirement> requirements = new ArrayList<>();
+}
 
