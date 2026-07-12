@@ -3,6 +3,7 @@ package com.danyaell.mavericklabsbe.game.service;
 import com.danyaell.mavericklabsbe.game.dto.route.*;
 import com.danyaell.mavericklabsbe.game.entity.*;
 import com.danyaell.mavericklabsbe.game.exception.ResourceNotFoundException;
+import com.danyaell.mavericklabsbe.game.repository.CollectibleRepository;
 import com.danyaell.mavericklabsbe.game.repository.GameRepository;
 import com.danyaell.mavericklabsbe.game.repository.StageRepository;
 import com.danyaell.mavericklabsbe.game.repository.WeaponRepository;
@@ -19,6 +20,7 @@ public class RouteAnalysisService {
 	private final GameRepository gameRepository;
 	private final StageRepository stageRepository;
 	private final WeaponRepository weaponRepository;
+	private final CollectibleRepository collectibleRepository;
 	private final RecommendationService recommendationService;
 
 	public RouteAnalysisResponse analyzeRoute(AnalyzeRouteRequest request) {
@@ -26,6 +28,7 @@ public class RouteAnalysisService {
 				.orElseThrow(() -> new ResourceNotFoundException("Game not found: " + request.gameCode()));
 
 		List<Stage> stages = stageRepository.findByGameIdWithAnalysisData(game.getId());
+		preloadCollectibleRequirements(stages);
 		Map<String, Stage> stageBySlug = stages.stream()
 				.collect(Collectors.toMap(Stage::getSlug, stage -> stage));
 
@@ -85,6 +88,34 @@ public class RouteAnalysisService {
 			if (request.stageOrder().size() != gameStageSlugs.size() || !gameStageSlugs.equals(unique)) {
 				throw new IllegalArgumentException("HUNDRED_PERCENT requires a complete route including all game stages");
 			}
+		}
+	}
+
+	private void preloadCollectibleRequirements(List<Stage> stages) {
+		if (stages.isEmpty()) {
+			return;
+		}
+
+		List<Long> stageIds = stages.stream()
+				.map(Stage::getId)
+				.filter(Objects::nonNull)
+				.toList();
+
+		if (stageIds.isEmpty()) {
+			return;
+		}
+
+		Map<Long, List<Collectible>> collectiblesByStageId = collectibleRepository.findByStageIdInWithRequirements(stageIds)
+				.stream()
+				.collect(Collectors.groupingBy(
+						collectible -> collectible.getStage().getId(),
+						LinkedHashMap::new,
+						Collectors.toList()
+				));
+
+		for (Stage stage : stages) {
+			List<Collectible> collectibles = collectiblesByStageId.getOrDefault(stage.getId(), List.of());
+			stage.setCollectibles(new ArrayList<>(collectibles));
 		}
 	}
 

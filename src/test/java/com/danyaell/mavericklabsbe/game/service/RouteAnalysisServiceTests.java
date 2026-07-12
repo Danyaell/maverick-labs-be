@@ -3,9 +3,11 @@ package com.danyaell.mavericklabsbe.game.service;
 import com.danyaell.mavericklabsbe.game.dto.route.*;
 import com.danyaell.mavericklabsbe.game.entity.*;
 import com.danyaell.mavericklabsbe.game.exception.ResourceNotFoundException;
+import com.danyaell.mavericklabsbe.game.repository.CollectibleRepository;
 import com.danyaell.mavericklabsbe.game.repository.GameRepository;
 import com.danyaell.mavericklabsbe.game.repository.StageRepository;
 import com.danyaell.mavericklabsbe.game.repository.WeaponRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,10 +37,18 @@ class RouteAnalysisServiceTests {
 	private WeaponRepository weaponRepository;
 
 	@Mock
+	private CollectibleRepository collectibleRepository;
+
+	@Mock
 	private RecommendationService recommendationService;
 
 	@InjectMocks
 	private RouteAnalysisService routeAnalysisService;
+
+	@BeforeEach
+	void setUp() {
+		lenient().when(collectibleRepository.findByStageIdInWithRequirements(any())).thenReturn(List.of());
+	}
 
 	@Test
 	@DisplayName("should_AnalyzeValidRoute_When_RequestIsValid")
@@ -93,6 +103,7 @@ class RouteAnalysisServiceTests {
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
 		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin));
 		when(weaponRepository.findByGameId(1L)).thenReturn(List.of());
+		when(collectibleRepository.findByStageIdInWithRequirements(any())).thenReturn(List.of(collectible));
 		when(recommendationService.generateRecommendations(any())).thenReturn(List.of());
 
 		RouteAnalysisResponse response = routeAnalysisService.analyzeRoute(request(List.of("chill-penguin")));
@@ -116,6 +127,7 @@ class RouteAnalysisServiceTests {
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
 		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
 		when(weaponRepository.findByGameId(1L)).thenReturn(List.of(shotgunIce));
+		when(collectibleRepository.findByStageIdInWithRequirements(any())).thenReturn(List.of(collectible));
 		when(recommendationService.generateRecommendations(any())).thenReturn(List.of());
 
 		RouteAnalysisResponse response = routeAnalysisService.analyzeRoute(request(List.of("chill-penguin", "spark-mandrill")));

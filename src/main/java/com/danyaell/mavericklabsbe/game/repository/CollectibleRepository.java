@@ -13,6 +13,7 @@ public interface CollectibleRepository extends JpaRepository<Collectible, Long> 
 
     @Query("SELECT DISTINCT c FROM Collectible c " +
             "LEFT JOIN FETCH c.requirements r " +
-            "WHERE c.stage.id IN :stageIds")
+            "WHERE c.stage.id IN :stageIds " +
+            "ORDER BY c.stage.id ASC, c.sortOrder ASC")
     List<Collectible> findByStageIdInWithRequirements(@Param("stageIds") List<Long> stageIds);
 }

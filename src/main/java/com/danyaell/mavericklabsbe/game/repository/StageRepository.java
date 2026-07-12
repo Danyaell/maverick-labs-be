@@ -21,7 +21,6 @@ public interface StageRepository extends JpaRepository<Stage, Long> {
     @Query("SELECT DISTINCT s FROM Stage s " +
             "LEFT JOIN FETCH s.boss b " +
             "LEFT JOIN FETCH s.collectibles c " +
-            "LEFT JOIN FETCH c.requirements r " +
             "WHERE s.game.id = :gameId " +
             "ORDER BY s.stageOrder ASC, c.sortOrder ASC")
     List<Stage> findByGameIdWithAnalysisData(@Param("gameId") Long gameId);
