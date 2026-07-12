@@ -293,6 +293,8 @@ class GameServiceTests {
         stage.setSlug(slug);
         stage.setName(name);
         stage.setStageOrder(stageOrder);
+        stage.setBaseDifficulty(5);
+        stage.setEstimatedMinutes(10);
         stage.setImageAssetKey("image-key");
         stage.setCollectibles(new ArrayList<>());
         return stage;

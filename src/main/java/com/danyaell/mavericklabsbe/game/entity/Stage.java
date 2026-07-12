@@ -47,4 +47,3 @@ public class Stage {
 	@OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Collectible> collectibles = new ArrayList<>();
 }
-
