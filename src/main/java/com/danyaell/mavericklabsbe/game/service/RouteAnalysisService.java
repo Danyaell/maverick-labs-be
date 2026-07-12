@@ -21,11 +21,9 @@ public class RouteAnalysisService {
 
     private static final int MAX_SCORE = 100;
     private static final int BASE_DIFFICULTY_CAP = 10;
-    private static final int WEAKNESS_OPTIMIZATION_BONUS = 8;
-    private static final int HARD_BOSS_WITHOUT_WEAKNESS_PENALTY = 10;
     private static final int HARD_BOSS_BASE_DIFFICULTY_THRESHOLD = 7;
-    private static final int BACKTRACK_TIME_PENALTY_PER_WARNING = 5;
-    private static final int HARD_BOSS_TIME_PENALTY = 3;
+    private static final int BACKTRACK_TIME_PENALTY_PER_WARNING = 4;
+    private static final int HARD_BOSS_TIME_PENALTY = 2;
 
     private final CollectibleRepository collectibleRepository;
     private final GameRepository gameRepository;
@@ -103,10 +101,16 @@ public class RouteAnalysisService {
             if (boss != null && hasText(boss.getWeaknessWeapon())) {
                 String weaknessWeapon = normalize(boss.getWeaknessWeapon());
                 if (acquiredWeapons.contains(weaknessWeapon)) {
-                    weaknessOptimization += WEAKNESS_OPTIMIZATION_BONUS;
+                    weaknessOptimization += calculateWeaknessBonus(currentStage);;
                 } else if (normalizeToNonNegative(currentStage.getBaseDifficulty()) >= HARD_BOSS_BASE_DIFFICULTY_THRESHOLD) {
-                    bossDifficulty += HARD_BOSS_WITHOUT_WEAKNESS_PENALTY;
+                    bossDifficulty += calculateBossWeaknessPenalty(currentStage);
                     hardBossWarnings++;
+                    warnings.add(new RouteWarningResponse(
+                            RouteWarningType.BOSS_WITHOUT_WEAKNESS,
+                            currentStage.getSlug(),
+                            null,
+                            "Boss '" + boss.getSlug() + "' is fought without weakness weapon '" + weaknessWeapon + "'"
+                    ));
                 }
             }
 
@@ -121,9 +125,11 @@ public class RouteAnalysisService {
                 : clampScore(Math.round((blockedCollectibles * 100f) / totalCollectibles));
 
         int timePenalty = (blockedCollectibles * BACKTRACK_TIME_PENALTY_PER_WARNING) + (hardBossWarnings * HARD_BOSS_TIME_PENALTY);
+        int routeComplexityPenalty = Math.round(backtrackingScore * 0.6f);
+        int timeDifficultyPenalty = Math.round(timePenalty * 0.5f);
         int estimatedMinutes = stageMinutes + timePenalty;
         int normalizedBaseDifficulty = normalizeBaseDifficulty(baseDifficultyTotal, request.stageOrder().size());
-        int difficultyScore = clampScore(normalizedBaseDifficulty + backtrackingScore + bossDifficulty + timePenalty - weaknessOptimization);
+        int difficultyScore = clampScore(normalizedBaseDifficulty + routeComplexityPenalty + bossDifficulty + timeDifficultyPenalty - weaknessOptimization);
 
         return new RouteAnalysisResponse(
                 game.getCode(),
@@ -201,6 +207,28 @@ public class RouteAnalysisService {
             case STAGE_CLEAR -> visitedStages.contains(requiredKey);
             case OTHER -> false;
         };
+    }
+
+    private int calculateWeaknessBonus(Stage stage) {
+        int baseDifficulty = normalizeToNonNegative(stage.getBaseDifficulty());
+        if (baseDifficulty >= 7) {
+            return 6;
+        } else if (baseDifficulty >= 5) {
+            return 4;
+        }
+        return 2;
+    }
+
+    private int calculateBossWeaknessPenalty(Stage stage) {
+        int baseDifficulty = normalizeToNonNegative(stage.getBaseDifficulty());
+        if (baseDifficulty >= 8) {
+            return 12;
+        }else if (baseDifficulty >= 6) {
+            return 8;
+        } else if (baseDifficulty >= 4) {
+            return 4;
+        }
+        return 0;
     }
 
     private int normalizeBaseDifficulty(int difficultyTotal, int stageCount) {

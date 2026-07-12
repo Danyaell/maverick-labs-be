@@ -1,5 +1,6 @@
 package com.danyaell.mavericklabsbe.game.dto;
 
 public enum RouteWarningType {
-    MISSING_REQUIREMENT
+    MISSING_REQUIREMENT,
+    BOSS_WITHOUT_WEAKNESS,
 }

@@ -82,14 +82,14 @@ INSERT INTO games (code, title, release_order) VALUES
 
 -- INSERT DATA INTO TABLE stages (for MMX)
 INSERT INTO stages (game_id, slug, name, stage_order, base_difficulty, estimated_minutes, image_asset_key) VALUES
-(1, 'chill-penguin', 'Chill Penguin Stage', 1, 2, 5,'mmx.stage.chill-penguin'),
-(1, 'storm-eagle', 'Storm Eagle Stage', 2, 3, 6, 'mmx.stage.storm-eagle'),
-(1, 'flame-mammoth', 'Flame Mammoth Stage', 3, 4, 6, 'mmx.stage.flame-mammoth'),
-(1, 'spark-mandrill', 'Spark Mandrill Stage', 4, 6, 7, 'mmx.stage.spark-mandrill'),
-(1, 'armored-armadillo', 'Armored Armadillo Stage', 5, 5, 7, 'mmx.stage.armored-armadillo'),
-(1, 'launch-octopus', 'Launch Octopus Stage', 6, 7, 8, 'mmx.stage.launch-octopus'),
-(1, 'boomer-kuwanger', 'Boomer Kuwanger Stage', 7, 7, 8, 'mmx.stage.boomer-kuwanger'),
-(1, 'sting-chameleon', 'Sting Chameleon Stage', 8, 6, 8, 'mmx.stage.sting-chameleon');
+(1, 'chill-penguin', 'Chill Penguin Stage', 1, 3, 8, 'mmx.stage.chill-penguin'),
+(1, 'storm-eagle', 'Storm Eagle Stage', 2, 4, 10, 'mmx.stage.storm-eagle'),
+(1, 'flame-mammoth', 'Flame Mammoth Stage', 3, 7, 12, 'mmx.stage.flame-mammoth'),
+(1, 'spark-mandrill', 'Spark Mandrill Stage', 4, 7, 10, 'mmx.stage.spark-mandrill'),
+(1, 'armored-armadillo', 'Armored Armadillo Stage', 5, 7, 10, 'mmx.stage.armored-armadillo'),
+(1, 'launch-octopus', 'Launch Octopus Stage', 6, 8, 14, 'mmx.stage.launch-octopus'),
+(1, 'boomer-kuwanger', 'Boomer Kuwanger Stage', 7, 8, 12, 'mmx.stage.boomer-kuwanger'),
+(1, 'sting-chameleon', 'Sting Chameleon Stage', 8, 7, 14, 'mmx.stage.sting-chameleon');
 
 -- INSERT DATA INTO TABLE bosses
 INSERT INTO bosses (stage_id, slug, name, image_asset_key, weakness_weapon) VALUES
