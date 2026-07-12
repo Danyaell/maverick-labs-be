@@ -35,11 +35,16 @@ public class Stage {
 	@Column(name = "image_asset_key")
 	private String imageAssetKey;
 
+	@Column(name = "base_difficulty", nullable = false)
+	private Integer baseDifficulty = 50;
+
+	@Column(name = "estimated_minutes", nullable = false)
+	private Integer estimatedMinutes = 15;
+
 	@OneToOne(mappedBy = "stage", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private Boss boss;
 
 	@OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Collectible> collectibles = new ArrayList<>();
 }
-
 

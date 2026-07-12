@@ -93,6 +93,53 @@ Gets detailed information about a specific game, including stages, bosses, weapo
 }
 ```
 
+### Route Analysis Module
+
+#### POST `/api/v1/routes/analyze`
+Analyzes a proposed stage order and returns route scoring, warnings, and recommendations.
+
+**Request body:**
+```json
+{
+  "gameCode": "MMX",
+  "stageOrder": ["chill-penguin", "spark-mandrill", "storm-eagle", "flame-mammoth"],
+  "goal": "HUNDRED_PERCENT"
+}
+```
+
+**Response 200 OK (shape):**
+```json
+{
+  "gameCode": "MMX",
+  "difficultyScore": 58,
+  "difficultyLabel": "MEDIUM",
+  "backtrackingScore": 20,
+  "estimatedMinutes": 64,
+  "warnings": [
+    {
+      "type": "MISSING_REQUIREMENT",
+      "message": "Collectible X may require revisiting Y later.",
+      "stageSlug": "flame-mammoth",
+      "collectibleSlug": "flame-mammoth-sub-tank"
+    }
+  ],
+  "breakdown": {
+    "bossDifficulty": 233,
+    "weaknessOptimization": 40,
+    "backtrackingPenalty": 20,
+    "timePenalty": 9
+  },
+  "recommendations": [
+    {
+      "type": "BACKTRACKING",
+      "severity": "WARNING",
+      "message": "You may need to revisit Flame Mammoth to collect all items.",
+      "relatedStages": ["flame-mammoth"]
+    }
+  ]
+}
+```
+
 **Response 404 Not Found:**
 ```json
 {
@@ -299,4 +346,3 @@ The project includes comprehensive unit and integration tests:
   - `PART` - General part component
   - `LIFE_UP` - Increases health counter
   - `OTHER` - Miscellaneous collectible type
-

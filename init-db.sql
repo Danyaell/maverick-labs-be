@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS stages (
     name VARCHAR(255) NOT NULL,
     stage_order INT NOT NULL,
     image_asset_key VARCHAR(255),
+    base_difficulty INT NOT NULL DEFAULT 50,
+    estimated_minutes INT NOT NULL DEFAULT 15,
     CONSTRAINT fk_stage_game FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS bosses (
     slug VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     image_asset_key VARCHAR(255),
+    weakness_weapon VARCHAR(100),
     CONSTRAINT fk_boss_stage FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -58,6 +61,16 @@ CREATE TABLE IF NOT EXISTS collectibles (
     CONSTRAINT fk_collectible_stage FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- CREATE TABLE collectible_requirements
+CREATE TABLE IF NOT EXISTS collectible_requirements (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    collectible_id BIGINT NOT NULL,
+    requirement_type VARCHAR(50) NOT NULL,
+    required_key VARCHAR(100) NOT NULL,
+    description LONGTEXT,
+    CONSTRAINT fk_requirement_collectible FOREIGN KEY (collectible_id) REFERENCES collectibles(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- INSERT DATA INTO TABLE games
 INSERT INTO games (code, title, release_order) VALUES
 ('MMX', 'Mega Man X', 1),
@@ -67,18 +80,18 @@ INSERT INTO games (code, title, release_order) VALUES
 ('MMX5', 'Mega Man X5', 5);
 
 -- INSERT DATA INTO TABLE stages (for MMX)
-INSERT INTO stages (game_id, slug, name, stage_order, image_asset_key) VALUES
-(1, 'chill-penguin', 'Chill Penguin Stage', 1, 'mmx.stage.chill-penguin'),
-(1, 'storm-eagle', 'Storm Eagle Stage', 2, 'mmx.stage.storm-eagle'),
-(1, 'flame-mammoth', 'Flame Mammoth Stage', 3, 'mmx.stage.flame-mammoth'),
-(1, 'spark-mandrill', 'Spark Mandrill Stage', 4, 'mmx.stage.spark-mandrill');
+INSERT INTO stages (game_id, slug, name, stage_order, image_asset_key, base_difficulty, estimated_minutes) VALUES
+(1, 'chill-penguin', 'Chill Penguin Stage', 1, 'mmx.stage.chill-penguin', 45, 12),
+(1, 'storm-eagle', 'Storm Eagle Stage', 2, 'mmx.stage.storm-eagle', 50, 14),
+(1, 'flame-mammoth', 'Flame Mammoth Stage', 3, 'mmx.stage.flame-mammoth', 70, 18),
+(1, 'spark-mandrill', 'Spark Mandrill Stage', 4, 'mmx.stage.spark-mandrill', 68, 16);
 
 -- INSERT DATA INTO TABLE bosses
-INSERT INTO bosses (stage_id, slug, name, image_asset_key) VALUES
-(1, 'chill-penguin', 'Chill Penguin', 'mmx.boss.chill-penguin'),
-(2, 'storm-eagle', 'Storm Eagle', 'mmx.boss.storm-eagle'),
-(3, 'flame-mammoth', 'Flame Mammoth', 'mmx.boss.flame-mammoth'),
-(4, 'spark-mandrill', 'Spark Mandrill', 'mmx.boss.spark-mandrill');
+INSERT INTO bosses (stage_id, slug, name, image_asset_key, weakness_weapon) VALUES
+(1, 'chill-penguin', 'Chill Penguin', 'mmx.boss.chill-penguin', 'flame-wave'),
+(2, 'storm-eagle', 'Storm Eagle', 'mmx.boss.storm-eagle', 'electric-spark'),
+(3, 'flame-mammoth', 'Flame Mammoth', 'mmx.boss.flame-mammoth', 'storm-tornado'),
+(4, 'spark-mandrill', 'Spark Mandrill', 'mmx.boss.spark-mandrill', 'shotgun-ice');
 
 -- INSERT DATA INTO TABLE weapons
 INSERT INTO weapons (game_id, obtained_from_stage_id, slug, name, description, image_asset_key) VALUES
@@ -100,3 +113,7 @@ INSERT INTO collectibles (stage_id, slug, name, type, description, image_asset_k
 (4, 'spark-mandrill-heart-tank', 'Heart Tank', 'HEART_TANK', 'Increases maximum health.', 'mmx.collectible.heart-tank', 1),
 (4, 'spark-mandrill-sub-tank', 'Sub Tank', 'SUB_TANK', 'Provides extra health reserve.', 'mmx.collectible.sub-tank', 2);
 
+-- INSERT DATA INTO TABLE collectible_requirements
+INSERT INTO collectible_requirements (collectible_id, requirement_type, required_key, description) VALUES
+(6, 'WEAPON', 'storm-tornado', 'Use Storm Tornado to break the chimney and reach this item.'),
+(8, 'COLLECTIBLE', 'leg-upgrade-capsule', 'Requires dash movement from the leg upgrade.');

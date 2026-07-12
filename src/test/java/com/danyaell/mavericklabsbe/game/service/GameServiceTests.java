@@ -212,7 +212,7 @@ class GameServiceTests {
         // Arrange
         Game game = createTestGame(1L, "MMX", "Mega Man X", 1);
         Stage stage = createTestStage(1L, game, "stage-1", "Stage 1", 1);
-        Boss boss = new Boss(1L, stage, "chill-penguin", "Chill Penguin", "image-key");
+        Boss boss = new Boss(1L, stage, "chill-penguin", "Chill Penguin", "image-key", null);
         stage.setBoss(boss);
 
         when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
@@ -317,4 +317,3 @@ class GameServiceTests {
         return List.of(stage1, stage2);
     }
 }
-

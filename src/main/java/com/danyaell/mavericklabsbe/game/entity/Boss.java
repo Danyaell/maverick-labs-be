@@ -28,6 +28,8 @@ public class Boss {
 
 	@Column(name = "image_asset_key")
 	private String imageAssetKey;
-}
 
+	@Column(name = "weakness_weapon")
+	private String weaknessWeapon;
+}
 
