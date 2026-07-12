@@ -43,6 +43,7 @@ public class Collectible {
 	private Integer sortOrder;
 
 	@OneToMany(mappedBy = "collectible", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("id ASC")
 	private List<CollectibleRequirement> requirements = new ArrayList<>();
 }
 

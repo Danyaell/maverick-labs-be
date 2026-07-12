@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS bosses (
     slug VARCHAR(100) NOT NULL,
     name VARCHAR(255) NOT NULL,
     image_asset_key VARCHAR(255),
-    weakness_weapon VARCHAR(100) NOT NULL,
+    weakness_weapon VARCHAR(100),
     CONSTRAINT fk_boss_stage FOREIGN KEY (stage_id) REFERENCES stages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

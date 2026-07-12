@@ -101,7 +101,7 @@ public class RouteAnalysisService {
             if (boss != null && hasText(boss.getWeaknessWeapon())) {
                 String weaknessWeapon = normalize(boss.getWeaknessWeapon());
                 if (acquiredWeapons.contains(weaknessWeapon)) {
-                    weaknessOptimization += calculateWeaknessBonus(currentStage);;
+                    weaknessOptimization += calculateWeaknessBonus(currentStage);
                 } else if (normalizeToNonNegative(currentStage.getBaseDifficulty()) >= HARD_BOSS_BASE_DIFFICULTY_THRESHOLD) {
                     bossDifficulty += calculateBossWeaknessPenalty(currentStage);
                     hardBossWarnings++;
