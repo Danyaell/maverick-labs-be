@@ -1,53 +1,108 @@
-# Maverick Labs - Backend
+# Maverick Labs BE
 
+Backend REST para Maverick Labs, construido con **Java 21**, **Spring Boot 4.1.0**, **Maven** y **MySQL**.
 
-## API REST
+## Stack y dependencias principales
 
-### Description
-REST API to manage games from the Mega Man X series developed with Spring Boot 4.1.0, Java 21 and MySQL.
-## Endpoints
+- Spring Web
+- Spring Data JPA
+- Bean Validation
+- MySQL Connector/J
+- Lombok
+- Spring Boot Test + H2 (tests)
 
-### Game Module
+## Requisitos
 
-#### GET `/api/v1/games`
-Gets the list of all games ordered by `releaseOrder` (ascending).
+- JDK 21
+- MySQL 8+
+- Maven Wrapper (`mvnw` / `mvnw.cmd`)
 
-**Response 200 OK:**
+## Configuracion de base de datos
+
+La app usa `application.yaml` y espera la configuracion de datasource por propiedades `spring.datasource.*` (por variables de entorno o argumentos).
+
+Ejemplo (PowerShell):
+
+```powershell
+$env:SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/maverick_labs"
+$env:SPRING_DATASOURCE_USERNAME="root"
+$env:SPRING_DATASOURCE_PASSWORD="tu_password"
+```
+
+Script de inicializacion disponible en `init-db.sql`:
+
+```bash
+mysql -u root -p < init-db.sql
+```
+
+## CORS
+
+Configurado globalmente por propiedades bajo `app.cors` en `src/main/resources/application.yaml`:
+
+- `allowed-origins` (default: `http://localhost:3000`)
+- `allowed-methods`
+- `allowed-headers`
+- `allow-credentials`
+- `max-age`
+
+## Ejecutar el proyecto
+
+Windows:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Linux/macOS:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Empaquetar:
+
+```bash
+./mvnw clean package
+```
+
+## Ejecutar tests
+
+Windows:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Linux/macOS:
+
+```bash
+./mvnw test
+```
+
+## API REST (base path: `/api/v1`)
+
+### 1. Games
+
+#### `GET /games`
+Retorna juegos ordenados por `releaseOrder` ascendente.
+
+Ejemplo de respuesta:
+
 ```json
 [
   {
     "code": "MMX",
     "title": "Mega Man X",
     "releaseOrder": 1
-  },
-  {
-    "code": "MMX2",
-    "title": "Mega Man X2",
-    "releaseOrder": 2
-  },
-  {
-    "code": "MMX3",
-    "title": "Mega Man X3",
-    "releaseOrder": 3
   }
 ]
 ```
 
-**Response 500 Error:**
-```json
-{
-  "status": 500,
-  "message": "Unexpected server error"
-}
-```
+#### `GET /games/{gameCode}`
+Retorna detalle del juego por codigo (busqueda case-insensitive).
 
-#### GET `/api/v1/games/{gameCode}`
-Gets detailed information about a specific game, including stages, bosses, weapons, and collectibles.
+Ejemplo de respuesta:
 
-**Parameters:**
-- `gameCode` (path): Game code in uppercase or lowercase (case-insensitive search). Example: `MMX`, `mmx`
-
-**Response 200 OK:**
 ```json
 {
   "code": "MMX",
@@ -78,14 +133,6 @@ Gets detailed information about a specific game, including stages, bosses, weapo
           "description": "Increases maximum health.",
           "imageAssetKey": "mmx.collectible.heart-tank",
           "sortOrder": 1
-        },
-        {
-          "slug": "leg-upgrade-capsule",
-          "name": "Leg Upgrade",
-          "type": "ARMOR_UPGRADE",
-          "description": "Unlocks dash movement.",
-          "imageAssetKey": "mmx.collectible.leg-upgrade",
-          "sortOrder": 2
         }
       ]
     }
@@ -93,21 +140,30 @@ Gets detailed information about a specific game, including stages, bosses, weapo
 }
 ```
 
-### Route Analysis Module
+### 2. Route Analysis
 
-#### POST `/api/v1/routes/analyze`
-Analyzes a proposed stage order and returns route scoring, warnings, and recommendations.
+#### `POST /routes/analyze`
+Analiza una ruta y devuelve puntajes, advertencias y recomendaciones.
 
-**Request body:**
+Request:
+
 ```json
 {
   "gameCode": "MMX",
-  "stageOrder": ["chill-penguin", "spark-mandrill", "storm-eagle", "flame-mammoth"],
+  "stageOrder": ["chill-penguin", "storm-eagle", "flame-mammoth", "spark-mandrill"],
   "goal": "HUNDRED_PERCENT"
 }
 ```
 
-**Response 200 OK (shape):**
+Reglas de validacion principales:
+
+- `gameCode`: obligatorio, no vacio
+- `stageOrder`: obligatorio, no vacio, sin duplicados
+- `goal`: obligatorio (actualmente solo `HUNDRED_PERCENT`)
+- Para `HUNDRED_PERCENT`, la ruta debe incluir **todas** las stages del juego exactamente una vez
+
+Respuesta (shape):
+
 ```json
 {
   "gameCode": "MMX",
@@ -140,209 +196,44 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
 }
 ```
 
-**Response 404 Not Found:**
+Enums usados en la respuesta:
+
+- `difficultyLabel`: `EASY`, `MEDIUM`, `HARD`
+- `warnings[].type`: `MISSING_REQUIREMENT`
+- `recommendations[].type`: `BOSS_ORDER`, `BACKTRACKING`, `ROUTE_EFFICIENCY`
+- `recommendations[].severity`: `INFO`, `WARNING`, `SUCCESS`
+
+## Manejo de errores
+
+La API usa un `@RestControllerAdvice` global y devuelve errores con este formato:
+
 ```json
 {
-  "status": 404,
-  "message": "Game not found: INVALID"
+  "status": 400,
+  "message": "descripcion del error"
 }
 ```
 
-**Response 500 Error:**
-```json
-{
-  "status": 500,
-  "message": "Unexpected server error"
-}
+Casos comunes:
+
+- `400`: errores de validacion/request invalido
+- `404`: recurso no encontrado
+- `500`: error interno (`"Unexpected server error"`)
+
+## Estructura actual del proyecto
+
+```text
+src/main/java/com/danyaell/mavericklabsbe
+├── common
+│   ├── dto
+│   └── exception
+├── config
+└── game
+    ├── controller
+    ├── dto
+    │   └── route
+    ├── entity
+    ├── exception
+    ├── repository
+    └── service
 ```
-
-## Project Structure
-
-```
-game/
-├── controller/
-│   └── GameController.java          # REST Controller
-├── service/
-│   └── GameService.java             # Business logic
-├── repository/
-│   ├── GameRepository.java          # DAO JPA for Game
-│   ├── StageRepository.java         # DAO JPA for Stage
-│   ├── WeaponRepository.java        # DAO JPA for Weapon
-│   └── BossRepository.java          # DAO JPA for Boss (optional)
-├── entity/
-│   ├── Game.java                    # JPA Entity - Game
-│   ├── Stage.java                   # JPA Entity - Stage
-│   ├── Boss.java                    # JPA Entity - Boss
-│   ├── Weapon.java                  # JPA Entity - Weapon
-│   ├── Collectible.java             # JPA Entity - Collectible
-│   └── CollectibleType.java         # Enum for collectible types
-├── exception/
-│   └── ResourceNotFoundException.java # Exception for not found resources
-└── dto/
-    ├── GameSummaryResponse.java     # Response DTO for game list
-    ├── GameDetailResponse.java      # Response DTO for game detail
-    ├── StageResponse.java           # Response DTO for stage
-    ├── BossResponse.java            # Response DTO for boss
-    ├── WeaponResponse.java          # Response DTO for weapon
-    └── CollectibleResponse.java     # Response DTO for collectible
-
-common/
-├── exception/
-│   └── GlobalExceptionHandler.java  # Global exception handler
-└── dto/
-    └── ErrorResponse.java           # Response DTO for error responses
-```
-
-## Data Base Configuration
-
-### Requirements
-- MySQL 8.0+
-- Database: maverick_labs
-
-### Create the database
-Run the `init-db.sql` script:
-```sql
-mysql -u root -p < init-db.sql
-```
-
-### Configure the application.yaml
-The configuration is ready in `src/main/resources/application.yaml`:
-- URL: jdbc:mysql://localhost:3306/maverick_labs
-- DDL: update (create/update tables automatically)
-- Dialect: MySQLDialect
-
-## Compilation and Execution
-
-### Compile the application
-```bash
-mvn clean compile
-```
-
-### Run tests
-```bash
-mvn test
-```
-
-### Package the application
-```bash
-mvn clean package
-```
-
-### Run the application
-```bash
-mvn spring-boot:run
-```
-
-Or run the packaged jar:
-```bash
-java -jar target/maverick-labs-be-0.0.1-SNAPSHOT.jar
-```
-
-## Testing
-
-The project includes comprehensive unit and integration tests:
-
-### Test Types
-- **Unit Tests**: Service layer tests using JUnit 5 and Mockito
-- **Controller Tests**: MockMvc tests for HTTP endpoint validation
-- **Repository Tests**: Data layer tests with H2 in-memory database
-- **Integration Tests**: Full Spring context tests for critical workflows
-
-### Running Tests
-```bash
-./mvnw test
-```
-
-### Test Coverage
-- GameService: 15+ tests covering getAllGames() and getGameDetailByCode()
-- GameController: 16+ tests covering both endpoints with various scenarios
-- GameRepository: 19+ tests covering CRUD operations and custom queries
-
-## Used Technologies
-
-- **Spring Boot**: 4.1.0
-- **Java**: 21
-- **Spring Data JPA**: Access to data
-- **MySQL Connector**: Driver for MySQL
-- **Lombok**: Code reduction
-- **Maven**: Dependency management
-
-## Database Schema
-
-### Game Entity
-| Field | Type | Description |
-|-------|------|-------------|
-| id | Long | Unique identifier (auto-generated) |
-| code | String | Unique code of the game |
-| title | String | Title of the game |
-| releaseOrder | Integer | Release order |
-
-### Stage Entity
-| Field | Type | Description |
-|-------|------|-------------|
-| id | Long | Unique identifier (auto-generated) |
-| game_id | Long | Foreign key to Game |
-| slug | String | URL-friendly identifier |
-| name | String | Stage name |
-| stageOrder | Integer | Order within the game |
-| imageAssetKey | String | Asset key for stage image |
-
-### Boss Entity
-| Field | Type | Description |
-|-------|------|-------------|
-| id | Long | Unique identifier (auto-generated) |
-| stage_id | Long | Foreign key to Stage (one-to-one) |
-| slug | String | URL-friendly identifier |
-| name | String | Boss name |
-| imageAssetKey | String | Asset key for boss image |
-
-### Weapon Entity
-| Field | Type | Description |
-|-------|------|-------------|
-| id | Long | Unique identifier (auto-generated) |
-| game_id | Long | Foreign key to Game |
-| obtained_from_stage_id | Long | Foreign key to Stage (where weapon is obtained) |
-| slug | String | URL-friendly identifier |
-| name | String | Weapon name |
-| description | String | Weapon description |
-| imageAssetKey | String | Asset key for weapon image |
-
-### Collectible Entity
-| Field | Type | Description |
-|-------|------|-------------|
-| id | Long | Unique identifier (auto-generated) |
-| stage_id | Long | Foreign key to Stage |
-| slug | String | URL-friendly identifier |
-| name | String | Collectible name |
-| type | String | Type of collectible (HEART_TANK, SUB_TANK, ARMOR_UPGRADE, WEAPON_UPGRADE, RIDE_ARMOR, PART, LIFE_UP, OTHER) |
-| description | String | Collectible description |
-| imageAssetKey | String | Asset key for collectible image |
-| sortOrder | Integer | Display order within stage |
-
-## Entity Relationships
-
-- **Game** has many **Stages** (1:N)
-- **Stage** has one **Boss** (1:1)
-- **Stage** has many **Collectibles** (1:N)
-- **Weapon** belongs to a **Game** (N:1)
-- **Weapon** may be obtained from a **Stage** (N:1, nullable)
-
-## Notes
-
-- **Game Management**: The `Game` entity is mapped to the `games` table in MySQL and serves as the root entity for the game detail hierarchy.
-- **Unique Code**: The `code` field is unique and required. Game code searches are case-insensitive (`findByCodeIgnoreCase`).
-- **Sorted Results**: Games are always returned ordered by `releaseOrder` in ascending order. Stages within a game are ordered by `stageOrder`, and collectibles within a stage are ordered by `sortOrder`.
-- **Error Handling**: Internal errors return status 500 with a generic message for security. Resource not found errors return status 404 with a descriptive message.
-- **DTO Pattern**: All API responses use DTOs (Data Transfer Objects) and never expose JPA entities directly to prevent LazyInitializationException and to decouple the API contract from the persistence model.
-- **Optimized Queries**: The `StageRepository` uses JOIN FETCH queries to load related entities (bosses and collectibles) in a single query, preventing N+1 query problems.
-- **Lombok Usage**: Lombok is used to reduce boilerplate code (@Data, @NoArgsConstructor, @AllArgsConstructor, @RequiredArgsConstructor).
-- **Dependency Injection**: Constructor injection is used throughout the application for better testability and immutability.
-- **Collectible Types**: Collectibles are categorized by type using an enum with the following values:
-  - `HEART_TANK` - Increases maximum health
-  - `SUB_TANK` - Provides extra health reserve
-  - `ARMOR_UPGRADE` - Increases defense or unlocks movement
-  - `WEAPON_UPGRADE` - Enhances weapon capabilities
-  - `RIDE_ARMOR` - Armor component or ride armor
-  - `PART` - General part component
-  - `LIFE_UP` - Increases health counter
-  - `OTHER` - Miscellaneous collectible type
