@@ -231,9 +231,9 @@ The configuration should be created in `src/main/resources/application.yaml`. He
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/maverick_labs?useSSL=false&serverTimezone=UTC
-    username: root
-    password: 1234
+    url: ${DB_URL:jdbc:mysql://localhost:3306/maverick_labs?useSSL=false&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
