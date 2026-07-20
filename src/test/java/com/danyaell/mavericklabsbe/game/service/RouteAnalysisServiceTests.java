@@ -88,7 +88,7 @@ class RouteAnalysisServiceTests {
 		RouteAnalysisResponse optimized = routeAnalysisService.analyzeRoute(request(List.of("chill-penguin", "spark-mandrill")));
 		RouteAnalysisResponse notOptimized = routeAnalysisService.analyzeRoute(request(List.of("spark-mandrill", "chill-penguin")));
 
-		assertThat(optimized.breakdown().weaknessOptimization()).isGreaterThan(notOptimized.breakdown().weaknessOptimization());
+		assertThat(optimized.breakdown().weaknessReduction()).isGreaterThan(notOptimized.breakdown().weaknessReduction());
 	}
 
 	@Test

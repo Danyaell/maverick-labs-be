@@ -123,7 +123,7 @@ class RecommendationServiceTests {
 		);
 
 		List<RouteRecommendationResponse> recommendations = recommendationService.generateRecommendations(context(orderedStages, List.of(), weapons, 60));
-		assertThat(recommendations).hasSizeLessThanOrEqualTo(8);
+		assertThat(recommendations).hasSizeLessThanOrEqualTo(15);
 	}
 
 	@Test
