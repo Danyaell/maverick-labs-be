@@ -59,7 +59,7 @@ class RouteAnalysisServiceTests {
 		Weapon shotgunIce = weapon(game, chillPenguin, "shotgun-ice", "Shotgun Ice");
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
 		when(weaponRepository.findByGameId(1L)).thenReturn(List.of(shotgunIce));
 		when(recommendationService.generateRecommendations(any())).thenReturn(List.of());
 
@@ -81,7 +81,7 @@ class RouteAnalysisServiceTests {
 		Weapon shotgunIce = weapon(game, chillPenguin, "shotgun-ice", "Shotgun Ice");
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
 		when(weaponRepository.findByGameId(1L)).thenReturn(List.of(shotgunIce));
 		when(recommendationService.generateRecommendations(any())).thenReturn(List.of());
 
@@ -101,7 +101,7 @@ class RouteAnalysisServiceTests {
 		chillPenguin.setCollectibles(List.of(collectible));
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin));
 		when(weaponRepository.findByGameId(1L)).thenReturn(List.of());
 		when(collectibleRepository.findByStageIdInWithRequirements(any())).thenReturn(List.of(collectible));
 		when(recommendationService.generateRecommendations(any())).thenReturn(List.of());
@@ -125,7 +125,7 @@ class RouteAnalysisServiceTests {
 		Weapon shotgunIce = weapon(game, chillPenguin, "shotgun-ice", "Shotgun Ice");
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
 		when(weaponRepository.findByGameId(1L)).thenReturn(List.of(shotgunIce));
 		when(collectibleRepository.findByStageIdInWithRequirements(any())).thenReturn(List.of(collectible));
 		when(recommendationService.generateRecommendations(any())).thenReturn(List.of());
@@ -142,7 +142,7 @@ class RouteAnalysisServiceTests {
 		Stage chillPenguin = stage(game, 1L, "chill-penguin", "Chill Penguin", 45, 12, "flame-wave");
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin));
 
 		assertThatThrownBy(() -> routeAnalysisService.analyzeRoute(request(List.of("chill-penguin", "chill-penguin"))))
 				.isInstanceOf(IllegalArgumentException.class)
@@ -157,7 +157,7 @@ class RouteAnalysisServiceTests {
 		Stage chillPenguin = stage(game, 1L, "chill-penguin", "Chill Penguin", 45, 12, "flame-wave");
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin));
 
 		assertThatThrownBy(() -> routeAnalysisService.analyzeRoute(request(List.of("spark-mandrill"))))
 				.isInstanceOf(IllegalArgumentException.class)
@@ -173,7 +173,7 @@ class RouteAnalysisServiceTests {
 		Stage sparkMandrill = stage(game, 2L, "spark-mandrill", "Spark Mandrill", 68, 16, "shotgun-ice");
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin, sparkMandrill));
 
 		assertThatThrownBy(() -> routeAnalysisService.analyzeRoute(request(List.of("chill-penguin"))))
 				.isInstanceOf(IllegalArgumentException.class)
@@ -204,7 +204,7 @@ class RouteAnalysisServiceTests {
 		);
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
-		when(stageRepository.findByGameIdWithAnalysisData(1L)).thenReturn(List.of(chillPenguin));
+		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin));
 		when(weaponRepository.findByGameId(1L)).thenReturn(List.of());
 		when(recommendationService.generateRecommendations(any())).thenReturn(List.of(recommendation));
 

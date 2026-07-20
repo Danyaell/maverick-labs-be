@@ -4,7 +4,7 @@
 ## API REST
 
 ### Description
-REST API to manage games from the Mega Man X series developed with Spring Boot 4.1.0, Java 21 and MySQL.
+REST API for modeling Mega Man X game data and analyzing player-defined routes based on boss weaknesses, collectible requirements, estimated difficulty, completion time, backtracking and actionable recommendations.
 ## Endpoints
 
 ### Game Module
@@ -124,10 +124,11 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
     }
   ],
   "breakdown": {
-    "bossDifficulty": 233,
-    "weaknessOptimization": 40,
-    "backtrackingPenalty": 20,
-    "timePenalty": 9
+    "baseDifficultyAverage": 64,
+    "combatDifficulty": 58,
+    "weaknessReduction": 6,
+    "routeEfficiencyScore": 68,
+    "timePenaltyMinutes": 9
   },
   "recommendations": [
     {
@@ -137,6 +138,14 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
       "relatedStages": ["flame-mammoth"]
     }
   ]
+}
+```
+
+**Response 400 Bad Request:**
+```json
+{
+  "status": 400,
+  "message": "stageOrder cannot be empty"
 }
 ```
 
@@ -156,35 +165,47 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
 }
 ```
 
-## Project Structure
+## Simplified Project Structure
 
 ```
 game/
 ├── controller/
-│   └── GameController.java          # REST Controller
+│   ├── GameController.java                   # REST Controller
+│   └── RouteAnalysisController.java          # REST Controller for route analysis
 ├── service/
-│   └── GameService.java             # Business logic
+│   ├── GameService.java                      # Business logic
+│   ├── RouteAnalysisService.java             # Business logic for route analysis
+│   ├── RecommendationService.java            # Business logic for recommendations
+│   └── RouteAnalysisContext.java             # Context for route analysis
 ├── repository/
-│   ├── GameRepository.java          # DAO JPA for Game
-│   ├── StageRepository.java         # DAO JPA for Stage
-│   ├── WeaponRepository.java        # DAO JPA for Weapon
-│   └── BossRepository.java          # DAO JPA for Boss (optional)
+│   ├── CollectibleRepository.java            # DAO JPA for Collectible
+│   ├── GameRepository.java                   # DAO JPA for Game
+│   ├── StageRepository.java                  # DAO JPA for Stage
+│   └── WeaponRepository.java                 # DAO JPA for Weapon
 ├── entity/
-│   ├── Game.java                    # JPA Entity - Game
-│   ├── Stage.java                   # JPA Entity - Stage
-│   ├── Boss.java                    # JPA Entity - Boss
-│   ├── Weapon.java                  # JPA Entity - Weapon
-│   ├── Collectible.java             # JPA Entity - Collectible
-│   └── CollectibleType.java         # Enum for collectible types
+│   ├── Game.java                             # JPA Entity - Game
+│   ├── Stage.java                            # JPA Entity - Stage
+│   ├── Boss.java                             # JPA Entity - Boss
+│   ├── Weapon.java                           # JPA Entity - Weapon
+│   ├── Collectible.java                      # JPA Entity - Collectible
+│   ├── CollectibleRequirement.java           # JPA Entity - CollectibleRequirement
+│   ├── CollectibleType.java                  # Enum for collectible types
+│   └── RequirementType.java                  # Enum for requirement types
 ├── exception/
 │   └── ResourceNotFoundException.java # Exception for not found resources
 └── dto/
-    ├── GameSummaryResponse.java     # Response DTO for game list
-    ├── GameDetailResponse.java      # Response DTO for game detail
-    ├── StageResponse.java           # Response DTO for stage
-    ├── BossResponse.java            # Response DTO for boss
-    ├── WeaponResponse.java          # Response DTO for weapon
-    └── CollectibleResponse.java     # Response DTO for collectible
+    ├── route/
+    │   ├── AnalyzeRouteRequest.java          # Request DTO for route analysis
+    │   ├── RouteAnalysisResponse.java        # Response DTO for route analysis
+    │   ├── RouteBreakdownResponse.java       # Response DTO for route breakdown
+    │   ├── RouteWarningResponse.java         # Response DTO for warnings
+    │   └── RouteRecommendationResponse.java  # Response DTO for recommendations
+    ├── GameSummaryResponse.java              # Response DTO for game list
+    ├── GameDetailResponse.java               # Response DTO for game detail
+    ├── StageResponse.java                    # Response DTO for stage
+    ├── BossResponse.java                     # Response DTO for boss
+    ├── WeaponResponse.java                   # Response DTO for weapon
+    └── CollectibleResponse.java              # Response DTO for collectible
 
 common/
 ├── exception/
@@ -206,10 +227,21 @@ mysql -u root -p < init-db.sql
 ```
 
 ### Configure the application.yaml
-The configuration is ready in `src/main/resources/application.yaml`:
-- URL: jdbc:mysql://localhost:3306/maverick_labs
-- DDL: update (create/update tables automatically)
-- Dialect: MySQLDialect
+The configuration should be created in `src/main/resources/application.yaml`. Here's an example configuration:
+```yaml
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/maverick_labs?useSSL=false&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+```
 
 ## Compilation and Execution
 
@@ -267,7 +299,7 @@ The project includes comprehensive unit and integration tests:
 - **Lombok**: Code reduction
 - **Maven**: Dependency management
 
-## Database Schema
+## Domain Model
 
 ### Game Entity
 | Field | Type | Description |
@@ -279,29 +311,32 @@ The project includes comprehensive unit and integration tests:
 
 ### Stage Entity
 | Field | Type | Description |
-|-------|------|-------------|
+|------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| game_id | Long | Foreign key to Game |
+| game | Long | Foreign key to Game |
 | slug | String | URL-friendly identifier |
 | name | String | Stage name |
 | stageOrder | Integer | Order within the game |
+| baseDifficulty | Integer | Base difficulty score for the stage |
+| estimatedMinutes | Integer | Estimated completion time in minutes |
 | imageAssetKey | String | Asset key for stage image |
 
 ### Boss Entity
 | Field | Type | Description |
 |-------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| stage_id | Long | Foreign key to Stage (one-to-one) |
+| stage | Long | Foreign key to Stage (one-to-one) |
 | slug | String | URL-friendly identifier |
 | name | String | Boss name |
 | imageAssetKey | String | Asset key for boss image |
+| weaknessWeapon | String | Slug of the weapon that is effective against this boss |
 
 ### Weapon Entity
 | Field | Type | Description |
-|-------|------|-------------|
+|------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| game_id | Long | Foreign key to Game |
-| obtained_from_stage_id | Long | Foreign key to Stage (where weapon is obtained) |
+| game | Long | Foreign key to Game |
+| obtainedFromStage | Long | Foreign key to Stage (where weapon is obtained) |
 | slug | String | URL-friendly identifier |
 | name | String | Weapon name |
 | description | String | Weapon description |
@@ -311,13 +346,23 @@ The project includes comprehensive unit and integration tests:
 | Field | Type | Description |
 |-------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| stage_id | Long | Foreign key to Stage |
+| stage | Long | Foreign key to Stage |
 | slug | String | URL-friendly identifier |
 | name | String | Collectible name |
 | type | String | Type of collectible (HEART_TANK, SUB_TANK, ARMOR_UPGRADE, WEAPON_UPGRADE, RIDE_ARMOR, PART, LIFE_UP, OTHER) |
 | description | String | Collectible description |
 | imageAssetKey | String | Asset key for collectible image |
 | sortOrder | Integer | Display order within stage |
+| requirements | List<CollectibleRequirement> | List of requirements for this collectible |
+
+### CollectibleRequirement Entity
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Long | Unique identifier (auto-generated) |
+| collectible | Long | Foreign key to Collectible |
+| requirementType | String | Type of requirement (e.g., weapon, collectible) |
+| requiredKey | String | Key of the required item (slug of weapon or collectible) |
+| description | String | Description of the requirement |
 
 ## Entity Relationships
 
@@ -326,6 +371,8 @@ The project includes comprehensive unit and integration tests:
 - **Stage** has many **Collectibles** (1:N)
 - **Weapon** belongs to a **Game** (N:1)
 - **Weapon** may be obtained from a **Stage** (N:1, nullable)
+- **Collectible** has many **CollectibleRequirements** (1:N)
+- **CollectibleRequirement** belongs to a **Collectible** (N:1)
 
 ## Notes
 
@@ -335,7 +382,7 @@ The project includes comprehensive unit and integration tests:
 - **Error Handling**: Internal errors return status 500 with a generic message for security. Resource not found errors return status 404 with a descriptive message.
 - **DTO Pattern**: All API responses use DTOs (Data Transfer Objects) and never expose JPA entities directly to prevent LazyInitializationException and to decouple the API contract from the persistence model.
 - **Optimized Queries**: The `StageRepository` uses JOIN FETCH queries to load related entities (bosses and collectibles) in a single query, preventing N+1 query problems.
-- **Lombok Usage**: Lombok is used to reduce boilerplate code (@Data, @NoArgsConstructor, @AllArgsConstructor, @RequiredArgsConstructor).
+- **Lombok Usage**: Lombok is used to reduce boilerplate code (@Getter, @Setter, @NoArgsConstructor, @AllArgsConstructor, @RequiredArgsConstructor).
 - **Dependency Injection**: Constructor injection is used throughout the application for better testability and immutability.
 - **Collectible Types**: Collectibles are categorized by type using an enum with the following values:
   - `HEART_TANK` - Increases maximum health

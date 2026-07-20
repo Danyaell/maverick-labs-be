@@ -1,15 +1,13 @@
 package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "weapons")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class Weapon {
 
 	@Id

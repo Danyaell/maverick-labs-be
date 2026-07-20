@@ -40,14 +40,13 @@ src/main/java/com/danyaell/mavericklabsbe/
     ├── dto
     └── exception
 ├── config
-└── feature
+└── game/
     ├── controller
     ├── dto
     ├── entity
+    ├── exception
     ├── repository
-    ├── service
-    ├── mapper
-    └── exception
+    └── service
 ```
 
 ## API conventions
@@ -78,11 +77,15 @@ Preferred test types:
 
 Before finishing a backend change, run:
 
-```./mvnw test```
+```bash
+./mvnw test
+```
 
 On Windows PowerShell:
 
-````.\mvnw test````
+```powershell
+.\mvnw test
+```
 
 ## Database rules
 - Do not assume production data exists.

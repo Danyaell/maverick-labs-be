@@ -31,7 +31,7 @@ public class RouteAnalysisService {
 		Game game = gameRepository.findByCodeIgnoreCase(request.gameCode().trim())
 				.orElseThrow(() -> new ResourceNotFoundException("Game not found: " + request.gameCode()));
 
-		List<Stage> stages = stageRepository.findByGameIdWithAnalysisData(game.getId());
+		List<Stage> stages = stageRepository.findByGameIdWithBossAndCollectibles(game.getId());
 		preloadCollectibleRequirements(stages);
 		Map<String, Stage> stageBySlug = stages.stream()
 				.collect(Collectors.toMap(Stage::getSlug, stage -> stage));
