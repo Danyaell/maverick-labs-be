@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @Service
 public class RecommendationService {
 
-	private static final int MAX_RECOMMENDATIONS = 8;
+	private static final int MAX_RECOMMENDATIONS = 20;
 	private static final int MAX_POSITIVE_BOSS_ORDER = 2;
 
 	public List<RouteRecommendationResponse> generateRecommendations(RouteAnalysisContext context) {
