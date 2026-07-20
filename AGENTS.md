@@ -77,11 +77,15 @@ Preferred test types:
 
 Before finishing a backend change, run:
 
-```./mvnw test```
+```bash
+./mvnw test
+```
 
 On Windows PowerShell:
 
-````.\mvnw test````
+```powershell
+.\mvnw test
+```
 
 ## Database rules
 - Do not assume production data exists.

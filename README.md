@@ -173,20 +173,21 @@ game/
 │   ├── CollectibleRepository.java            # DAO JPA for Collectible
 │   ├── GameRepository.java                   # DAO JPA for Game
 │   ├── StageRepository.java                  # DAO JPA for Stage
-│   ├── WeaponRepository.java                 # DAO JPA for Weapon
-│   └── BossRepository.java                   # DAO JPA for Boss (optional)
+│   └── WeaponRepository.java                 # DAO JPA for Weapon
 ├── entity/
 │   ├── Game.java                             # JPA Entity - Game
 │   ├── Stage.java                            # JPA Entity - Stage
 │   ├── Boss.java                             # JPA Entity - Boss
 │   ├── Weapon.java                           # JPA Entity - Weapon
 │   ├── Collectible.java                      # JPA Entity - Collectible
-│   └── CollectibleType.java                  # Enum for collectible types
+│   ├── CollectibleRequirement.java           # JPA Entity - CollectibleRequirement
+│   ├── CollectibleType.java                  # Enum for collectible types
+│   └── RequirementType.java                  # Enum for requirement types
 ├── exception/
 │   └── ResourceNotFoundException.java # Exception for not found resources
 └── dto/
-    ├──route/
-    │   ├── AnalysisRouteRequest.java         # Request DTO for route analysis
+    ├── route/
+    │   ├── AnalyzeRouteRequest.java          # Request DTO for route analysis
     │   ├── RouteAnalysisResponse.java        # Response DTO for route analysis
     │   ├── RouteBreakdownResponse.java       # Response DTO for route breakdown
     │   ├── RouteWarningResponse.java         # Response DTO for warnings
@@ -362,6 +363,8 @@ The project includes comprehensive unit and integration tests:
 - **Stage** has many **Collectibles** (1:N)
 - **Weapon** belongs to a **Game** (N:1)
 - **Weapon** may be obtained from a **Stage** (N:1, nullable)
+- **Collectible** has many **CollectibleRequirements** (1:N)
+- **CollectibleRequirement** belongs to a **Collectible** (N:1)
 
 ## Notes
 
@@ -371,7 +374,7 @@ The project includes comprehensive unit and integration tests:
 - **Error Handling**: Internal errors return status 500 with a generic message for security. Resource not found errors return status 404 with a descriptive message.
 - **DTO Pattern**: All API responses use DTOs (Data Transfer Objects) and never expose JPA entities directly to prevent LazyInitializationException and to decouple the API contract from the persistence model.
 - **Optimized Queries**: The `StageRepository` uses JOIN FETCH queries to load related entities (bosses and collectibles) in a single query, preventing N+1 query problems.
-- **Lombok Usage**: Lombok is used to reduce boilerplate code (@Data, @NoArgsConstructor, @AllArgsConstructor, @RequiredArgsConstructor).
+- **Lombok Usage**: Lombok is used to reduce boilerplate code (@Getter, @Setter, @NoArgsConstructor, @AllArgsConstructor, @RequiredArgsConstructor).
 - **Dependency Injection**: Constructor injection is used throughout the application for better testability and immutability.
 - **Collectible Types**: Collectibles are categorized by type using an enum with the following values:
   - `HEART_TANK` - Increases maximum health

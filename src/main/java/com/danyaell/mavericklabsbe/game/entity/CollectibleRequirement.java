@@ -1,15 +1,13 @@
 package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "collectible_requirements")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class CollectibleRequirement {
 
 	@Id
@@ -18,8 +16,6 @@ public class CollectibleRequirement {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "collectible_id", nullable = false)
-	@lombok.ToString.Exclude
-	@lombok.EqualsAndHashCode.Exclude
 	private Collectible collectible;
 
 	@Enumerated(EnumType.STRING)
