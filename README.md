@@ -124,10 +124,11 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
     }
   ],
   "breakdown": {
-    "bossDifficulty": 233,
-    "weaknessOptimization": 40,
-    "backtrackingPenalty": 20,
-    "timePenalty": 9
+    "baseDifficultyAverage": 233,
+    "combatDifficulty": 30,
+    "weaknessReduction": 40,
+    "routeEfficiencyScore": 68,
+    "timePenaltyMinutes": 9
   },
   "recommendations": [
     {
@@ -206,10 +207,21 @@ mysql -u root -p < init-db.sql
 ```
 
 ### Configure the application.yaml
-The configuration is ready in `src/main/resources/application.yaml`:
-- URL: jdbc:mysql://localhost:3306/maverick_labs
-- DDL: update (create/update tables automatically)
-- Dialect: MySQLDialect
+The configuration should be created in `src/main/resources/application.yaml`. Here's an example configuration:
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/maverick_labs?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+```
 
 ## Compilation and Execution
 

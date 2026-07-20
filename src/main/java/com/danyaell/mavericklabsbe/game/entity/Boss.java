@@ -18,6 +18,8 @@ public class Boss {
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stage_id", nullable = false)
+	@lombok.ToString.Exclude
+	@lombok.EqualsAndHashCode.Exclude
 	private Stage stage;
 
 	@Column(nullable = false)
@@ -30,6 +32,8 @@ public class Boss {
 	private String imageAssetKey;
 
 	@Column(name = "weakness_weapon")
+	@lombok.ToString.Exclude
+	@lombok.EqualsAndHashCode.Exclude
 	private String weaknessWeapon;
 }
 

@@ -42,8 +42,12 @@ public class Stage {
 	private Integer estimatedMinutes = 15;
 
 	@OneToOne(mappedBy = "stage", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@lombok.ToString.Exclude
+	@lombok.EqualsAndHashCode.Exclude
 	private Boss boss;
 
 	@OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
+	@lombok.ToString.Exclude
+	@lombok.EqualsAndHashCode.Exclude
 	private List<Collectible> collectibles = new ArrayList<>();
 }

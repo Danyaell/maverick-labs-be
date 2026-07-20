@@ -21,6 +21,8 @@ public class Collectible {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stage_id", nullable = false)
+	@lombok.ToString.Exclude
+	@lombok.EqualsAndHashCode.Exclude
 	private Stage stage;
 
 	@Column(nullable = false)
@@ -43,6 +45,8 @@ public class Collectible {
 	private Integer sortOrder;
 
 	@OneToMany(mappedBy = "collectible", cascade = CascadeType.ALL, orphanRemoval = true)
+	@lombok.ToString.Exclude
+	@lombok.EqualsAndHashCode.Exclude
 	private List<CollectibleRequirement> requirements = new ArrayList<>();
 }
 
