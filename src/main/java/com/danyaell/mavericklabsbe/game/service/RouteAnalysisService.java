@@ -23,6 +23,10 @@ public class RouteAnalysisService {
 	private final CollectibleRepository collectibleRepository;
 	private final RecommendationService recommendationService;
 
+	private static final int DEFAULT_BASE_DIFFICULTY = 50;
+	private static final double WEAKNESS_MULTIPLIER = 0.65;
+	private static final double NO_WEAKNESS_MULTIPLIER = 1.0;
+
 	public RouteAnalysisResponse analyzeRoute(AnalyzeRouteRequest request) {
 		Game game = gameRepository.findByCodeIgnoreCase(request.gameCode().trim())
 				.orElseThrow(() -> new ResourceNotFoundException("Game not found: " + request.gameCode()));
@@ -45,10 +49,11 @@ public class RouteAnalysisService {
 
 		SimulationResult simulation = simulate(request.stageOrder(), stageBySlug, weaponsByStageSlug);
 		RouteBreakdownResponse breakdown = new RouteBreakdownResponse(
-				simulation.bossDifficulty,
-				simulation.weaknessOptimization,
-				simulation.backtrackingPenalty,
-				simulation.timePenalty
+				simulation.baseDifficultyAverage,
+				simulation.combatDifficulty,
+				simulation.weaknessReduction,
+				simulation.routeEfficiencyScore,
+				simulation.timePenaltyMinutes
 		);
 
 		RouteAnalysisContext context = new RouteAnalysisContext(
@@ -129,30 +134,33 @@ public class RouteAnalysisService {
 		Set<String> visitedStages = new HashSet<>();
 		List<RouteWarningResponse> warnings = new ArrayList<>();
 
-		int bossDifficulty = 0;
-		int weaknessOptimization = 0;
 		int difficultWithoutWeaknessCount = 0;
 		int rawBacktrackingPenalty = 0;
 		int totalMinutes = 0;
 
-		for (String stageSlug : stageOrder) {
-			Stage stage = stageBySlug.get(stageSlug);
-			if (stage == null) {
-				continue;
-			}
+		double totalBaseDifficulty = 0;
+		double totalEffectiveDifficulty = 0;
 
-			int baseDifficulty = stage.getBaseDifficulty() == null ? 50 : stage.getBaseDifficulty();
+		for (String stageSlug : stageOrder) {
+			Stage stage = Objects.requireNonNull(
+					stageBySlug.get(stageSlug),
+					"Validated stage unexpectedly missing: " + stageSlug
+			);
+
+			int baseDifficulty = stage.getBaseDifficulty() != null
+					? stage.getBaseDifficulty()
+					: DEFAULT_BASE_DIFFICULTY;
+			totalBaseDifficulty += baseDifficulty;
+			boolean weaknessAvailable = hasBossWeakness(stage.getBoss(), acquiredWeapons);
+
+			double multiplier = weaknessAvailable ? WEAKNESS_MULTIPLIER : NO_WEAKNESS_MULTIPLIER;
+			totalEffectiveDifficulty += baseDifficulty * multiplier;
+
 			int stageMinutes = stage.getEstimatedMinutes() == null ? 15 : stage.getEstimatedMinutes();
 			totalMinutes += stageMinutes;
-			bossDifficulty += baseDifficulty;
 
-			Boss boss = stage.getBoss();
-			if (boss != null && boss.getWeaknessWeapon() != null && !boss.getWeaknessWeapon().isBlank()) {
-				if (acquiredWeapons.contains(boss.getWeaknessWeapon())) {
-					weaknessOptimization += 20;
-				} else if (baseDifficulty >= 60) {
-					difficultWithoutWeaknessCount++;
-				}
+			if (!weaknessAvailable && baseDifficulty >= 60) {
+				difficultWithoutWeaknessCount++;
 			}
 
 			for (Collectible collectible : stage.getCollectibles()) {
@@ -186,21 +194,35 @@ public class RouteAnalysisService {
 		}
 
 		int backtrackingScore = Math.min(100, rawBacktrackingPenalty);
-		int backtrackingPenalty = backtrackingScore;
 		int difficultBossPenalty = difficultWithoutWeaknessCount * 10;
-		int difficultyScore = clampScore(bossDifficulty - weaknessOptimization + difficultBossPenalty + (backtrackingScore / 2));
-		int timePenalty = (backtrackingScore / 4) + (difficultWithoutWeaknessCount * 3);
+		int stageCount = stageOrder.size();
+
+		int difficultyScore = stageCount == 0 ? 0 : clampScore((int) Math.round(totalEffectiveDifficulty / stageCount));
+		int averageBaseDifficulty = stageCount == 0 ? 0 : (int) Math.round(totalBaseDifficulty / stageCount);
+		int weaknessReduction = Math.max(0, averageBaseDifficulty - difficultyScore);
+
+		int timePenaltyMinutes = (backtrackingScore / 4) + (difficultWithoutWeaknessCount * 3);
+
+		int routeEfficiencyScore = clampScore(100 - (backtrackingScore * 0.65) - (difficultBossPenalty * 0.50) + weaknessReduction);
 
 		return new SimulationResult(
 				clampScore(difficultyScore),
 				backtrackingScore,
-				totalMinutes + timePenalty,
-				bossDifficulty,
-				weaknessOptimization,
-				backtrackingPenalty,
-				timePenalty,
+				totalMinutes + timePenaltyMinutes,
+				averageBaseDifficulty,
+				difficultyScore,
+				weaknessReduction,
+				routeEfficiencyScore,
+				timePenaltyMinutes,
 				warnings
 		);
+	}
+
+	private boolean hasBossWeakness(Boss boss, Set<String> acquiredWeapons) {
+		if (boss == null || boss.getWeaknessWeapon() == null || boss.getWeaknessWeapon().isBlank()) {
+			return false;
+		}
+		return acquiredWeapons.contains(boss.getWeaknessWeapon());
 	}
 
 	private boolean isRequirementMet(
@@ -228,36 +250,42 @@ public class RouteAnalysisService {
 	}
 
 	private int clampScore(int value) {
-		return Math.max(0, Math.min(100, value));
+		return Math.clamp(value, 0, 100);
+	}
+	private int clampScore(double value) {
+		return Math.clamp((int) Math.round(value), 0, 100);
 	}
 
 	private static class SimulationResult {
 		private final int difficultyScore;
 		private final int backtrackingScore;
 		private final int estimatedMinutes;
-		private final int bossDifficulty;
-		private final int weaknessOptimization;
-		private final int backtrackingPenalty;
-		private final int timePenalty;
+		private final int baseDifficultyAverage;
+		private final int combatDifficulty;
+		private final int weaknessReduction;
+		private final int routeEfficiencyScore;
+		private final int timePenaltyMinutes;
 		private final List<RouteWarningResponse> warnings;
 
 		private SimulationResult(
 				int difficultyScore,
 				int backtrackingScore,
 				int estimatedMinutes,
-				int bossDifficulty,
-				int weaknessOptimization,
-				int backtrackingPenalty,
-				int timePenalty,
+				int baseDifficultyAverage,
+				int combatDifficulty,
+				int weaknessReduction,
+				int routeEfficiencyScore,
+				int timePenaltyMinutes,
 				List<RouteWarningResponse> warnings
 		) {
 			this.difficultyScore = difficultyScore;
 			this.backtrackingScore = backtrackingScore;
 			this.estimatedMinutes = estimatedMinutes;
-			this.bossDifficulty = bossDifficulty;
-			this.weaknessOptimization = weaknessOptimization;
-			this.backtrackingPenalty = backtrackingPenalty;
-			this.timePenalty = timePenalty;
+			this.baseDifficultyAverage = baseDifficultyAverage;
+			this.combatDifficulty = combatDifficulty;
+			this.weaknessReduction = weaknessReduction;
+			this.routeEfficiencyScore = routeEfficiencyScore;
+			this.timePenaltyMinutes = timePenaltyMinutes;
 			this.warnings = warnings;
 		}
 	}

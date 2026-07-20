@@ -169,7 +169,7 @@ class RouteAnalysisControllerTests {
 				20,
 				46,
 				List.of(),
-				new RouteBreakdownResponse(60, 20, 20, 6),
+				new RouteBreakdownResponse(60, 20, 20, 6, 10),
 				recommendations
 		);
 	}
