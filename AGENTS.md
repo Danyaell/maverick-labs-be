@@ -40,14 +40,13 @@ src/main/java/com/danyaell/mavericklabsbe/
     ├── dto
     └── exception
 ├── config
-└── feature
+└── game/
     ├── controller
     ├── dto
     ├── entity
+    ├── exception
     ├── repository
-    ├── service
-    ├── mapper
-    └── exception
+    └── service
 ```
 
 ## API conventions

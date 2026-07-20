@@ -1,18 +1,16 @@
 package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "stages")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@lombok.Getter
+@lombok.Setter
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class Stage {
 
 	@Id
@@ -41,13 +39,9 @@ public class Stage {
 	@Column(name = "estimated_minutes", nullable = false)
 	private Integer estimatedMinutes = 15;
 
-	@OneToOne(mappedBy = "stage", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@lombok.ToString.Exclude
-	@lombok.EqualsAndHashCode.Exclude
+	@OneToOne(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Boss boss;
 
 	@OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
-	@lombok.ToString.Exclude
-	@lombok.EqualsAndHashCode.Exclude
 	private List<Collectible> collectibles = new ArrayList<>();
 }

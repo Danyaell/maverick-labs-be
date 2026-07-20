@@ -18,6 +18,8 @@ public class CollectibleRequirement {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "collectible_id", nullable = false)
+	@lombok.ToString.Exclude
+	@lombok.EqualsAndHashCode.Exclude
 	private Collectible collectible;
 
 	@Enumerated(EnumType.STRING)

@@ -4,7 +4,7 @@
 ## API REST
 
 ### Description
-REST API to manage games from the Mega Man X series developed with Spring Boot 4.1.0, Java 21 and MySQL.
+REST API for modeling Mega Man X game data and analyzing player-defined routes based on boss weaknesses, collectible requirements, estimated difficulty, completion time, backtracking and actionable recommendations.
 ## Endpoints
 
 ### Game Module
@@ -124,9 +124,9 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
     }
   ],
   "breakdown": {
-    "baseDifficultyAverage": 233,
-    "combatDifficulty": 30,
-    "weaknessReduction": 40,
+    "baseDifficultyAverage": 64,
+    "combatDifficulty": 58,
+    "weaknessReduction": 6,
     "routeEfficiencyScore": 68,
     "timePenaltyMinutes": 9
   },
@@ -162,30 +162,41 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
 ```
 game/
 ├── controller/
-│   └── GameController.java          # REST Controller
+│   ├── GameController.java                   # REST Controller
+│   └── RouteAnalysisController.java          # REST Controller for route analysis
 ├── service/
-│   └── GameService.java             # Business logic
+│   ├── GameService.java                      # Business logic
+│   ├── RouteAnalysisService.java             # Business logic for route analysis
+│   ├── RecommendationService.java            # Business logic for recommendations
+│   └── RouteAnalysisContext.java             # Context for route analysis
 ├── repository/
-│   ├── GameRepository.java          # DAO JPA for Game
-│   ├── StageRepository.java         # DAO JPA for Stage
-│   ├── WeaponRepository.java        # DAO JPA for Weapon
-│   └── BossRepository.java          # DAO JPA for Boss (optional)
+│   ├── CollectibleRepository.java            # DAO JPA for Collectible
+│   ├── GameRepository.java                   # DAO JPA for Game
+│   ├── StageRepository.java                  # DAO JPA for Stage
+│   ├── WeaponRepository.java                 # DAO JPA for Weapon
+│   └── BossRepository.java                   # DAO JPA for Boss (optional)
 ├── entity/
-│   ├── Game.java                    # JPA Entity - Game
-│   ├── Stage.java                   # JPA Entity - Stage
-│   ├── Boss.java                    # JPA Entity - Boss
-│   ├── Weapon.java                  # JPA Entity - Weapon
-│   ├── Collectible.java             # JPA Entity - Collectible
-│   └── CollectibleType.java         # Enum for collectible types
+│   ├── Game.java                             # JPA Entity - Game
+│   ├── Stage.java                            # JPA Entity - Stage
+│   ├── Boss.java                             # JPA Entity - Boss
+│   ├── Weapon.java                           # JPA Entity - Weapon
+│   ├── Collectible.java                      # JPA Entity - Collectible
+│   └── CollectibleType.java                  # Enum for collectible types
 ├── exception/
 │   └── ResourceNotFoundException.java # Exception for not found resources
 └── dto/
-    ├── GameSummaryResponse.java     # Response DTO for game list
-    ├── GameDetailResponse.java      # Response DTO for game detail
-    ├── StageResponse.java           # Response DTO for stage
-    ├── BossResponse.java            # Response DTO for boss
-    ├── WeaponResponse.java          # Response DTO for weapon
-    └── CollectibleResponse.java     # Response DTO for collectible
+    ├──route/
+    │   ├── AnalysisRouteRequest.java         # Request DTO for route analysis
+    │   ├── RouteAnalysisResponse.java        # Response DTO for route analysis
+    │   ├── RouteBreakdownResponse.java       # Response DTO for route breakdown
+    │   ├── RouteWarningResponse.java         # Response DTO for warnings
+    │   └── RouteRecommendationResponse.java  # Response DTO for recommendations
+    ├── GameSummaryResponse.java              # Response DTO for game list
+    ├── GameDetailResponse.java               # Response DTO for game detail
+    ├── StageResponse.java                    # Response DTO for stage
+    ├── BossResponse.java                     # Response DTO for boss
+    ├── WeaponResponse.java                   # Response DTO for weapon
+    └── CollectibleResponse.java              # Response DTO for collectible
 
 common/
 ├── exception/
@@ -297,23 +308,26 @@ The project includes comprehensive unit and integration tests:
 | slug | String | URL-friendly identifier |
 | name | String | Stage name |
 | stageOrder | Integer | Order within the game |
+| baseDifficulty | Integer | Base difficulty score for the stage |
+| estimatedMinutes | Integer | Estimated completion time in minutes |
 | imageAssetKey | String | Asset key for stage image |
 
 ### Boss Entity
 | Field | Type | Description |
 |-------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| stage_id | Long | Foreign key to Stage (one-to-one) |
+| stage | Long | Foreign key to Stage (one-to-one) |
 | slug | String | URL-friendly identifier |
 | name | String | Boss name |
 | imageAssetKey | String | Asset key for boss image |
+| weaknessWeapon | String | Slug of the weapon that is effective against this boss |
 
 ### Weapon Entity
 | Field | Type | Description |
-|-------|------|-------------|
+|------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| game_id | Long | Foreign key to Game |
-| obtained_from_stage_id | Long | Foreign key to Stage (where weapon is obtained) |
+| game | Long | Foreign key to Game |
+| obtainedFromStage | Long | Foreign key to Stage (where weapon is obtained) |
 | slug | String | URL-friendly identifier |
 | name | String | Weapon name |
 | description | String | Weapon description |
@@ -323,13 +337,23 @@ The project includes comprehensive unit and integration tests:
 | Field | Type | Description |
 |-------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| stage_id | Long | Foreign key to Stage |
+| stage | Long | Foreign key to Stage |
 | slug | String | URL-friendly identifier |
 | name | String | Collectible name |
 | type | String | Type of collectible (HEART_TANK, SUB_TANK, ARMOR_UPGRADE, WEAPON_UPGRADE, RIDE_ARMOR, PART, LIFE_UP, OTHER) |
 | description | String | Collectible description |
 | imageAssetKey | String | Asset key for collectible image |
 | sortOrder | Integer | Display order within stage |
+| requirements | List<CollectibleRequirement> | List of requirements for this collectible |
+
+### CollectibleRequirement Entity
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Long | Unique identifier (auto-generated) |
+| collectible | Long | Foreign key to Collectible |
+| requirementType | String | Type of requirement (e.g., weapon, collectible) |
+| requiredKey | String | Key of the required item (slug of weapon or collectible) |
+| description | String | Description of the requirement |
 
 ## Entity Relationships
 
