@@ -141,6 +141,14 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
 }
 ```
 
+**Response 400 Bad Request:**
+```json
+{
+  "status": 400,
+  "message": "stageOrder cannot be empty"
+}
+```
+
 **Response 404 Not Found:**
 ```json
 {
@@ -157,7 +165,7 @@ Analyzes a proposed stage order and returns route scoring, warnings, and recomme
 }
 ```
 
-## Project Structure
+## Simplified Project Structure
 
 ```
 game/
@@ -291,7 +299,7 @@ The project includes comprehensive unit and integration tests:
 - **Lombok**: Code reduction
 - **Maven**: Dependency management
 
-## Database Schema
+## Domain Model
 
 ### Game Entity
 | Field | Type | Description |
@@ -303,9 +311,9 @@ The project includes comprehensive unit and integration tests:
 
 ### Stage Entity
 | Field | Type | Description |
-|-------|------|-------------|
+|------|------|-------------|
 | id | Long | Unique identifier (auto-generated) |
-| game_id | Long | Foreign key to Game |
+| game | Long | Foreign key to Game |
 | slug | String | URL-friendly identifier |
 | name | String | Stage name |
 | stageOrder | Integer | Order within the game |
