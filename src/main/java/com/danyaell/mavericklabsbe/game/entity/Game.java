@@ -49,7 +49,8 @@ public class Game {
     }
 
     public void addWeapon(Weapon weapon) {
-        weapons.add(weapon);
+        Objects.requireNonNull(weapon, "weapon is required");
         weapon.setGame(this);
+        weapons.add(weapon);
     }
 }

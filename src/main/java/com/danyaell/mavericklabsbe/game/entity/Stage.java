@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "stages")
@@ -42,6 +43,7 @@ public class Stage {
 	@OneToOne(mappedBy = "stage", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private Boss boss;
 
+	@lombok.Setter(lombok.AccessLevel.NONE)
 	@OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Collectible> collectibles = new ArrayList<>();
 
@@ -54,7 +56,12 @@ public class Stage {
 	}
 
 	public void addCollectible(Collectible collectible) {
-		collectibles.add(collectible);
+		Objects.requireNonNull(
+				collectible,
+				"collectible is required"
+		);
+
 		collectible.setStage(this);
+		collectibles.add(collectible);
 	}
 }

@@ -33,8 +33,11 @@ public class RouteAnalysisService {
 		Game game = gameRepository.findByCodeIgnoreCase(request.gameCode().trim())
 				.orElseThrow(() -> new ResourceNotFoundException("Game not found: " + request.gameCode()));
 
-		List<Stage> stages = stageRepository.findByGameIdWithBossAndCollectibles(game.getId());
-		preloadCollectibleRequirements(stages);
+		List<Stage> stages =
+				stageRepository.findByGameIdWithBossAndCollectibles(game.getId());
+
+		Map<Long, List<Collectible>> collectiblesByStageId =
+				loadCollectiblesWithRequirements(stages);
 		Map<String, Stage> stageBySlug = stages.stream()
 				.collect(Collectors.toMap(Stage::getSlug, stage -> stage));
 
@@ -50,7 +53,12 @@ public class RouteAnalysisService {
 						weapon -> weapon,
 						(left, right) -> left
 				));
-		SimulationResult simulation = simulate(request.stageOrder(), stageBySlug, weaponsByStageId);
+		SimulationResult simulation = simulate(
+				request.stageOrder(),
+				stageBySlug,
+				weaponsByStageId,
+				collectiblesByStageId
+		);
 		RouteBreakdownResponse breakdown = new RouteBreakdownResponse(
 				simulation.baseDifficultyAverage,
 				simulation.combatDifficulty,
@@ -101,34 +109,33 @@ public class RouteAnalysisService {
 		}
 	}
 
-	private void preloadCollectibleRequirements(List<Stage> stages) {
+	private Map<Long, List<Collectible>> loadCollectiblesWithRequirements(
+			List<Stage> stages
+	) {
 		List<Long> stageIds = stages.stream()
 				.map(Stage::getId)
 				.filter(Objects::nonNull)
 				.toList();
 
 		if (stageIds.isEmpty()) {
-			return;
+			return Map.of();
 		}
 
-		Map<Long, List<Collectible>> collectiblesByStageId = collectibleRepository.findByStageIdInWithRequirements(stageIds)
+		return collectibleRepository
+				.findByStageIdInWithRequirements(stageIds)
 				.stream()
 				.collect(Collectors.groupingBy(
 						collectible -> collectible.getStage().getId(),
 						LinkedHashMap::new,
 						Collectors.toList()
 				));
-
-		for (Stage stage : stages) {
-			List<Collectible> collectibles = collectiblesByStageId.getOrDefault(stage.getId(), List.of());
-			stage.setCollectibles(new ArrayList<>(collectibles));
-		}
 	}
 
 	private SimulationResult simulate(
 			List<String> stageOrder,
 			Map<String, Stage> stageBySlug,
-			Map<Long, Weapon> weaponsByStageId
+			Map<Long, Weapon> weaponsByStageId,
+			Map<Long, List<Collectible>> collectiblesByStageId
 	) {
 		Set<Long> acquiredWeaponIds = new HashSet<>();
 		Set<Long> acquiredCollectibleIds = new HashSet<>();
@@ -167,7 +174,13 @@ public class RouteAnalysisService {
 				difficultWithoutWeaknessCount++;
 			}
 
-			for (Collectible collectible : stage.getCollectibles()) {
+			List<Collectible> stageCollectibles =
+					collectiblesByStageId.getOrDefault(
+							stage.getId(),
+							List.of()
+					);
+
+			for (Collectible collectible : stageCollectibles) {
 				boolean blocked = false;
 				for (CollectibleRequirement requirement : collectible.getRequirements()) {
 					if (!isRequirementMet(

@@ -191,7 +191,8 @@ class GameServiceTests {
 
         Collectible c1 = createTestCollectible(1L, stage, "col-1", "Collectible 1", 2);
         Collectible c2 = createTestCollectible(2L, stage, "col-2", "Collectible 2", 1);
-        stage.setCollectibles(List.of(c1, c2));
+        stage.addCollectible(c1);
+        stage.addCollectible(c2);
 
         when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
         when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(stage));
@@ -296,7 +297,6 @@ class GameServiceTests {
         stage.setBaseDifficulty(5);
         stage.setEstimatedMinutes(10);
         stage.setImageAssetKey("image-key");
-        stage.setCollectibles(new ArrayList<>());
         return stage;
     }
 
