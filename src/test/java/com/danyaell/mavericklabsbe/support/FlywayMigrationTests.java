@@ -31,12 +31,12 @@ class FlywayMigrationTests {
         Long requirements = count("collectible_requirements");
 
         assertThat(migrations).isEqualTo(2);
-        assertThat(games).isEqualTo(5);
-        assertThat(stages).isEqualTo(4);
-        assertThat(bosses).isEqualTo(4);
-        assertThat(weapons).isEqualTo(4);
-        assertThat(collectibles).isEqualTo(10);
-        assertThat(requirements).isEqualTo(2);
+        assertThat(games).isEqualTo(8);
+        assertThat(stages).isEqualTo(8);
+        assertThat(bosses).isEqualTo(8);
+        assertThat(weapons).isEqualTo(8);
+        assertThat(collectibles).isEqualTo(17);
+        assertThat(requirements).isEqualTo(39);
     }
 
     private Long count(String table) {

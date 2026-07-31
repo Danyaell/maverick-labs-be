@@ -90,6 +90,14 @@ CREATE TABLE weapons (
                          CONSTRAINT uk_weapons_game_slug
                              UNIQUE (game_id, slug),
 
+                         CONSTRAINT uk_weapons_id_game
+                             UNIQUE (id, game_id),
+
+    -- A stage can award at most one weapon. MySQL permits multiple NULLs,
+    -- so non-stage weapons can still be represented later.
+                         CONSTRAINT uk_weapons_obtained_stage
+                             UNIQUE (obtained_from_stage_id),
+
                          KEY idx_weapons_obtained_stage_game (
         obtained_from_stage_id,
         game_id
@@ -123,6 +131,7 @@ CREATE TABLE weapons (
 
 CREATE TABLE bosses (
                         id BIGINT NOT NULL AUTO_INCREMENT,
+                        game_id BIGINT NOT NULL,
                         stage_id BIGINT NOT NULL,
                         slug VARCHAR(100) NOT NULL,
                         name VARCHAR(255) NOT NULL,
@@ -134,16 +143,27 @@ CREATE TABLE bosses (
                         CONSTRAINT uk_bosses_stage
                             UNIQUE (stage_id),
 
-                        KEY idx_bosses_weakness_weapon (weakness_weapon_id),
+                        CONSTRAINT uk_bosses_game_slug
+                            UNIQUE (game_id, slug),
 
-                        CONSTRAINT fk_bosses_stage
-                            FOREIGN KEY (stage_id)
-                                REFERENCES stages (id)
+                        KEY idx_bosses_stage_game (
+        stage_id,
+        game_id
+    ),
+
+                        KEY idx_bosses_weakness_weapon_game (
+        weakness_weapon_id,
+        game_id
+    ),
+
+                        CONSTRAINT fk_bosses_stage_game
+                            FOREIGN KEY (stage_id, game_id)
+                                REFERENCES stages (id, game_id)
                                 ON DELETE CASCADE,
 
-                        CONSTRAINT fk_bosses_weakness_weapon
-                            FOREIGN KEY (weakness_weapon_id)
-                                REFERENCES weapons (id)
+                        CONSTRAINT fk_bosses_weakness_weapon_game
+                            FOREIGN KEY (weakness_weapon_id, game_id)
+                                REFERENCES weapons (id, game_id)
                                 ON DELETE RESTRICT,
 
                         CONSTRAINT chk_bosses_slug_not_blank
@@ -164,6 +184,7 @@ CREATE TABLE bosses (
 
 CREATE TABLE collectibles (
                               id BIGINT NOT NULL AUTO_INCREMENT,
+                              game_id BIGINT NOT NULL,
                               stage_id BIGINT NOT NULL,
                               slug VARCHAR(100) NOT NULL,
                               name VARCHAR(255) NOT NULL,
@@ -180,9 +201,17 @@ CREATE TABLE collectibles (
                               CONSTRAINT uk_collectibles_stage_sort_order
                                   UNIQUE (stage_id, sort_order),
 
-                              CONSTRAINT fk_collectibles_stage
-                                  FOREIGN KEY (stage_id)
-                                      REFERENCES stages (id)
+                              CONSTRAINT uk_collectibles_id_game
+                                  UNIQUE (id, game_id),
+
+                              KEY idx_collectibles_stage_game (
+        stage_id,
+        game_id
+    ),
+
+                              CONSTRAINT fk_collectibles_stage_game
+                                  FOREIGN KEY (stage_id, game_id)
+                                      REFERENCES stages (id, game_id)
                                       ON DELETE CASCADE,
 
                               CONSTRAINT chk_collectibles_slug_not_blank
@@ -223,6 +252,7 @@ CREATE TABLE collectibles (
 
 CREATE TABLE collectible_requirements (
                                           id BIGINT NOT NULL AUTO_INCREMENT,
+                                          game_id BIGINT NOT NULL,
                                           collectible_id BIGINT NOT NULL,
                                           requirement_type VARCHAR(50) NOT NULL,
 
@@ -243,28 +273,44 @@ CREATE TABLE collectible_requirements (
                                           CONSTRAINT uk_requirements_collectible_stage
                                               UNIQUE (collectible_id, required_stage_id),
 
-                                          KEY idx_requirements_weapon (required_weapon_id),
-                                          KEY idx_requirements_required_collectible (required_collectible_id),
-                                          KEY idx_requirements_stage (required_stage_id),
+                                          KEY idx_requirements_collectible_game (
+        collectible_id,
+        game_id
+    ),
 
-                                          CONSTRAINT fk_requirements_collectible
-                                              FOREIGN KEY (collectible_id)
-                                                  REFERENCES collectibles (id)
+                                          KEY idx_requirements_weapon_game (
+        required_weapon_id,
+        game_id
+    ),
+
+                                          KEY idx_requirements_required_collectible_game (
+        required_collectible_id,
+        game_id
+    ),
+
+                                          KEY idx_requirements_stage_game (
+        required_stage_id,
+        game_id
+    ),
+
+                                          CONSTRAINT fk_requirements_collectible_game
+                                              FOREIGN KEY (collectible_id, game_id)
+                                                  REFERENCES collectibles (id, game_id)
                                                   ON DELETE CASCADE,
 
-                                          CONSTRAINT fk_requirements_weapon
-                                              FOREIGN KEY (required_weapon_id)
-                                                  REFERENCES weapons (id)
+                                          CONSTRAINT fk_requirements_weapon_game
+                                              FOREIGN KEY (required_weapon_id, game_id)
+                                                  REFERENCES weapons (id, game_id)
                                                   ON DELETE RESTRICT,
 
-                                          CONSTRAINT fk_requirements_required_collectible
-                                              FOREIGN KEY (required_collectible_id)
-                                                  REFERENCES collectibles (id)
+                                          CONSTRAINT fk_requirements_required_collectible_game
+                                              FOREIGN KEY (required_collectible_id, game_id)
+                                                  REFERENCES collectibles (id, game_id)
                                                   ON DELETE RESTRICT,
 
-                                          CONSTRAINT fk_requirements_stage
-                                              FOREIGN KEY (required_stage_id)
-                                                  REFERENCES stages (id)
+                                          CONSTRAINT fk_requirements_stage_game
+                                              FOREIGN KEY (required_stage_id, game_id)
+                                                  REFERENCES stages (id, game_id)
                                                   ON DELETE RESTRICT,
 
                                           CONSTRAINT chk_requirements_type
@@ -312,6 +358,15 @@ CREATE TABLE collectible_requirements (
                                               CHECK (
                                                   required_collectible_id IS NULL
                                                       OR required_collectible_id <> collectible_id
+                                                  ),
+
+                                          CONSTRAINT chk_requirements_other_description
+                                              CHECK (
+                                                  requirement_type <> 'OTHER'
+                                                      OR (
+                                                      description IS NOT NULL
+                                                          AND CHAR_LENGTH(TRIM(description)) > 0
+                                                      )
                                                   )
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
