@@ -239,13 +239,14 @@ class RouteAnalysisServiceTests {
 		boss.setStage(stage);
 		boss.setSlug(slug);
 		boss.setName(bossName);
-		boss.setWeaknessWeapon(weaknessWeapon);
+		boss.setWeaknessWeapon(weaponReference(weaknessWeapon));
 		stage.setBoss(boss);
 		return stage;
 	}
 
 	private Weapon weapon(Game game, Stage stage, String slug, String name) {
 		Weapon weapon = new Weapon();
+		weapon.setId(weaponId(slug));
 		weapon.setGame(game);
 		weapon.setObtainedFromStage(stage);
 		weapon.setSlug(slug);
@@ -266,7 +267,23 @@ class RouteAnalysisServiceTests {
 		CollectibleRequirement requirement = new CollectibleRequirement();
 		requirement.setCollectible(collectible);
 		requirement.setRequirementType(type);
-		requirement.setRequiredKey(requiredKey);
+		requirement.setRequiredWeapon(weaponReference(requiredKey));
 		return requirement;
+	}
+
+	private Weapon weaponReference(String slug) {
+		if (slug == null || slug.isBlank()) {
+			return null;
+		}
+
+		Weapon weapon = new Weapon();
+		weapon.setId(weaponId(slug));
+		weapon.setSlug(slug);
+		weapon.setName(slug);
+		return weapon;
+	}
+
+	private Long weaponId(String slug) {
+		return 1_000L + Math.abs(slug.hashCode());
 	}
 }

@@ -15,19 +15,25 @@ public class Boss {
 	private Long id;
 
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "stage_id", nullable = false)
+	@JoinColumn(
+			name = "stage_id",
+			nullable = false,
+			unique = true,
+			foreignKey = @ForeignKey(name = "fk_boss_stage")
+	)
 	private Stage stage;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 100)
 	private String slug;
 
 	@Column(nullable = false)
 	private String name;
 
-	@Column(name = "image_asset_key")
+	@Column(name = "image_asset_key", length = 255)
 	private String imageAssetKey;
 
-	@Column(name = "weakness_weapon")
-	private String weaknessWeapon;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "weakness_weapon_id")
+	private Weapon weaknessWeapon;
 }
 

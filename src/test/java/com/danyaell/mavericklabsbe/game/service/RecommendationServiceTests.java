@@ -21,13 +21,13 @@ class RecommendationServiceTests {
 	@Test
 	@DisplayName("should_GenerateBossOrderWarning_When_ProviderAppearsAfterTarget")
 	void should_GenerateBossOrderWarning_When_ProviderAppearsAfterTarget() {
-		Stage sparkMandrill = stage("spark-mandrill", "Spark Mandrill", "shotgun-ice");
-		Stage chillPenguin = stage("chill-penguin", "Chill Penguin", "flame-wave");
+		Stage sparkMandrill = stage(1L, "spark-mandrill", "Spark Mandrill", "shotgun-ice");
+		Stage chillPenguin = stage(2L, "chill-penguin", "Chill Penguin", "flame-wave");
 
 		RouteAnalysisContext context = context(
 				List.of(sparkMandrill, chillPenguin),
 				List.of(),
-				Map.of("chill-penguin", weapon("shotgun-ice", "Shotgun Ice", chillPenguin)),
+				Map.of(chillPenguin.getId(), weapon("shotgun-ice", "Shotgun Ice", chillPenguin)),
 				10
 		);
 
@@ -43,13 +43,13 @@ class RecommendationServiceTests {
 	@Test
 	@DisplayName("should_GenerateBossOrderInfo_When_ProviderAppearsBeforeTarget")
 	void should_GenerateBossOrderInfo_When_ProviderAppearsBeforeTarget() {
-		Stage chillPenguin = stage("chill-penguin", "Chill Penguin", "flame-wave");
-		Stage sparkMandrill = stage("spark-mandrill", "Spark Mandrill", "shotgun-ice");
+		Stage chillPenguin = stage(1L, "chill-penguin", "Chill Penguin", "flame-wave");
+		Stage sparkMandrill = stage(2L, "spark-mandrill", "Spark Mandrill", "shotgun-ice");
 
 		RouteAnalysisContext context = context(
 				List.of(chillPenguin, sparkMandrill),
 				List.of(),
-				Map.of("chill-penguin", weapon("shotgun-ice", "Shotgun Ice", chillPenguin)),
+				Map.of(chillPenguin.getId(), weapon("shotgun-ice", "Shotgun Ice", chillPenguin)),
 				10
 		);
 
@@ -72,7 +72,7 @@ class RecommendationServiceTests {
 				"flame-mammoth-heart-tank"
 		);
 
-		RouteAnalysisContext context = context(List.of(stage("flame-mammoth", "Flame Mammoth", null)), List.of(warning), Map.of(), 45);
+		RouteAnalysisContext context = context(List.of(stage(1L, "flame-mammoth", "Flame Mammoth", null)), List.of(warning), Map.of(), 45);
 		List<RouteRecommendationResponse> recommendations = recommendationService.generateRecommendations(context);
 
 		assertThat(recommendations)
@@ -88,7 +88,7 @@ class RecommendationServiceTests {
 		RouteWarningResponse first = new RouteWarningResponse(RouteWarningType.MISSING_REQUIREMENT, "blocked", "flame-mammoth", "one");
 		RouteWarningResponse second = new RouteWarningResponse(RouteWarningType.MISSING_REQUIREMENT, "blocked again", "flame-mammoth", "two");
 
-		RouteAnalysisContext context = context(List.of(stage("flame-mammoth", "Flame Mammoth", null)), List.of(first, second), Map.of(), 45);
+		RouteAnalysisContext context = context(List.of(stage(1L, "flame-mammoth", "Flame Mammoth", null)), List.of(first, second), Map.of(), 45);
 		List<RouteRecommendationResponse> recommendations = recommendationService.generateRecommendations(context);
 
 		assertThat(recommendations)
@@ -100,26 +100,26 @@ class RecommendationServiceTests {
 	@DisplayName("should_LimitRecommendations_ToMaximumCount")
 	void should_LimitRecommendations_ToMaximumCount() {
 		List<Stage> orderedStages = List.of(
-				stage("a", "A", "w2"),
-				stage("b", "B", "w3"),
-				stage("c", "C", "w4"),
-				stage("d", "D", "w5"),
-				stage("e", "E", "w6"),
-				stage("f", "F", "w7"),
-				stage("g", "G", "w8"),
-				stage("h", "H", "w9"),
-				stage("i", "I", "w10")
+				stage(1L, "a", "A", "w2"),
+				stage(2L, "b", "B", "w3"),
+				stage(3L, "c", "C", "w4"),
+				stage(4L, "d", "D", "w5"),
+				stage(5L, "e", "E", "w6"),
+				stage(6L, "f", "F", "w7"),
+				stage(7L, "g", "G", "w8"),
+				stage(8L, "h", "H", "w9"),
+				stage(9L, "i", "I", "w10")
 		);
-		Map<String, Weapon> weapons = Map.of(
-				"i", weapon("w2", "W2", orderedStages.get(8)),
-				"h", weapon("w3", "W3", orderedStages.get(7)),
-				"g", weapon("w4", "W4", orderedStages.get(6)),
-				"f", weapon("w5", "W5", orderedStages.get(5)),
-				"e", weapon("w6", "W6", orderedStages.get(4)),
-				"d", weapon("w7", "W7", orderedStages.get(3)),
-				"c", weapon("w8", "W8", orderedStages.get(2)),
-				"b", weapon("w9", "W9", orderedStages.get(1)),
-				"a", weapon("w10", "W10", orderedStages.get(0))
+		Map<Long, Weapon> weapons = Map.of(
+				orderedStages.get(8).getId(), weapon("w2", "W2", orderedStages.get(8)),
+				orderedStages.get(7).getId(), weapon("w3", "W3", orderedStages.get(7)),
+				orderedStages.get(6).getId(), weapon("w4", "W4", orderedStages.get(6)),
+				orderedStages.get(5).getId(), weapon("w5", "W5", orderedStages.get(5)),
+				orderedStages.get(4).getId(), weapon("w6", "W6", orderedStages.get(4)),
+				orderedStages.get(3).getId(), weapon("w7", "W7", orderedStages.get(3)),
+				orderedStages.get(2).getId(), weapon("w8", "W8", orderedStages.get(2)),
+				orderedStages.get(1).getId(), weapon("w9", "W9", orderedStages.get(1)),
+				orderedStages.get(0).getId(), weapon("w10", "W10", orderedStages.get(0))
 		);
 
 		List<RouteRecommendationResponse> recommendations = recommendationService.generateRecommendations(context(orderedStages, List.of(), weapons, 60));
@@ -129,14 +129,14 @@ class RecommendationServiceTests {
 	@Test
 	@DisplayName("should_PrioritizeWarnings_BeforeInfos")
 	void should_PrioritizeWarnings_BeforeInfos() {
-		Stage sparkMandrill = stage("spark-mandrill", "Spark Mandrill", "shotgun-ice");
-		Stage chillPenguin = stage("chill-penguin", "Chill Penguin", "flame-wave");
+		Stage sparkMandrill = stage(1L, "spark-mandrill", "Spark Mandrill", "shotgun-ice");
+		Stage chillPenguin = stage(2L, "chill-penguin", "Chill Penguin", "flame-wave");
 		RouteWarningResponse warning = new RouteWarningResponse(RouteWarningType.MISSING_REQUIREMENT, "blocked", "spark-mandrill", "x");
 
 		RouteAnalysisContext context = context(
 				List.of(sparkMandrill, chillPenguin),
 				List.of(warning),
-				Map.of("chill-penguin", weapon("shotgun-ice", "Shotgun Ice", chillPenguin)),
+				Map.of(chillPenguin.getId(), weapon("shotgun-ice", "Shotgun Ice", chillPenguin)),
 				45
 		);
 
@@ -148,7 +148,7 @@ class RecommendationServiceTests {
 	@DisplayName("should_ReturnEmpty_When_NoRelevantRecommendationsExist")
 	void should_ReturnEmpty_When_NoRelevantRecommendationsExist() {
 		List<RouteRecommendationResponse> recommendations = recommendationService.generateRecommendations(
-				context(List.of(stage("chill-penguin", "Chill Penguin", null)), List.of(), Map.of(), 5)
+				context(List.of(stage(1L, "chill-penguin", "Chill Penguin", null)), List.of(), Map.of(), 5)
 		);
 
 		assertThat(recommendations).isEmpty();
@@ -157,7 +157,7 @@ class RecommendationServiceTests {
 	private RouteAnalysisContext context(
 			List<Stage> orderedStages,
 			List<RouteWarningResponse> warnings,
-			Map<String, Weapon> weaponsByStage,
+			Map<Long, Weapon> weaponsByStage,
 			Integer backtrackingScore
 	) {
 		Game game = new Game();
@@ -165,23 +165,42 @@ class RecommendationServiceTests {
 		return new RouteAnalysisContext(game, orderedStages, weaponsByStage, warnings, backtrackingScore);
 	}
 
-	private Stage stage(String slug, String bossName, String weaknessWeapon) {
+	private Stage stage(Long id, String slug, String bossName, String weaknessWeapon) {
 		Stage stage = new Stage();
+		stage.setId(id);
 		stage.setSlug(slug);
 		stage.setName(bossName + " Stage");
 		Boss boss = new Boss();
 		boss.setSlug(slug);
 		boss.setName(bossName);
-		boss.setWeaknessWeapon(weaknessWeapon);
+		boss.setWeaknessWeapon(weaponReference(weaknessWeapon));
 		stage.setBoss(boss);
 		return stage;
 	}
 
 	private Weapon weapon(String slug, String name, Stage obtainedFromStage) {
 		Weapon weapon = new Weapon();
+		weapon.setId(weaponId(slug));
 		weapon.setSlug(slug);
 		weapon.setName(name);
 		weapon.setObtainedFromStage(obtainedFromStage);
+
 		return weapon;
+	}
+
+	private Weapon weaponReference(String slug) {
+		if (slug == null || slug.isBlank()) {
+			return null;
+		}
+
+		Weapon weapon = new Weapon();
+		weapon.setId(weaponId(slug));
+		weapon.setSlug(slug);
+		weapon.setName(slug);
+		return weapon;
+	}
+
+	private Long weaponId(String slug) {
+		return 1_000L + Math.abs(slug.hashCode());
 	}
 }

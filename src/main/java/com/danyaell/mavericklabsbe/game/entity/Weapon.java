@@ -18,11 +18,11 @@ public class Weapon {
 	@JoinColumn(name = "game_id", nullable = false)
 	private Game game;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "obtained_from_stage_id")
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "obtained_from_stage_id", unique = true)
 	private Stage obtainedFromStage;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 100)
 	private String slug;
 
 	@Column(nullable = false)
@@ -31,7 +31,7 @@ public class Weapon {
 	@Column(columnDefinition = "TEXT")
 	private String description;
 
-	@Column(name = "image_asset_key")
+	@Column(name = "image_asset_key", length = 255)
 	private String imageAssetKey;
 }
 

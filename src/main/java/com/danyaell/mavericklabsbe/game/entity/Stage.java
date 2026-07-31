@@ -21,7 +21,7 @@ public class Stage {
 	@JoinColumn(name = "game_id", nullable = false)
 	private Game game;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 100)
 	private String slug;
 
 	@Column(nullable = false)
