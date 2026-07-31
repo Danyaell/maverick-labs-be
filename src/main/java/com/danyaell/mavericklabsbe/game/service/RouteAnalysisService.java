@@ -102,10 +102,6 @@ public class RouteAnalysisService {
 	}
 
 	private void preloadCollectibleRequirements(List<Stage> stages) {
-		if (stages.isEmpty()) {
-			return;
-		}
-
 		List<Long> stageIds = stages.stream()
 				.map(Stage::getId)
 				.filter(Objects::nonNull)

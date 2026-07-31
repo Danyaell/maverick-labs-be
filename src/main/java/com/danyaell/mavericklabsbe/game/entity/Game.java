@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "games")
@@ -42,8 +43,9 @@ public class Game {
     }
 
     public void addStage(Stage stage) {
-        stages.add(stage);
+        Objects.requireNonNull(stage, "stage is required");
         stage.setGame(this);
+        stages.add(stage);
     }
 
     public void addWeapon(Weapon weapon) {

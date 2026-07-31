@@ -378,21 +378,21 @@ INSERT INTO collectibles (
       (
           @mmx_game_id,
           @chill_penguin_stage_id,
-          'chill-penguin-heart-tank',
-          'Heart Tank',
-          'HEART_TANK',
-          'Increases maximum health.',
-          'mmx.collectible.heart-tank',
-          1
-      ),
-      (
-          @mmx_game_id,
-          @chill_penguin_stage_id,
           'leg-upgrade-capsule',
           'Leg Upgrade',
           'ARMOR_UPGRADE',
           'Unlocks dash movement and longer dash jumps.',
           'mmx.collectible.leg-upgrade',
+          1
+      ),
+      (
+          @mmx_game_id,
+          @chill_penguin_stage_id,
+          'chill-penguin-heart-tank',
+          'Heart Tank',
+          'HEART_TANK',
+          'Increases maximum health.',
+          'mmx.collectible.heart-tank',
           2
       ),
       (
