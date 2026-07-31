@@ -17,6 +17,10 @@ public class Collectible {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "game_id", nullable = false)
+	private Game game;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "stage_id", nullable = false)
 	private Stage stage;

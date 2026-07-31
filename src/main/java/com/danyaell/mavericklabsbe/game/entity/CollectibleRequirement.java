@@ -34,6 +34,10 @@ public class CollectibleRequirement {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "game_id", nullable = false)
+	private Game game;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
 			name = "collectible_id",

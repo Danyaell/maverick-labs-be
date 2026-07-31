@@ -14,6 +14,10 @@ public class Boss {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "game_id", nullable = false)
+	private Game game;
+
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
 			name = "stage_id",
