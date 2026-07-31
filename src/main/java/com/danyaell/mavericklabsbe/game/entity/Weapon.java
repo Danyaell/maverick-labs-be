@@ -2,6 +2,8 @@ package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "weapons")
 @lombok.Getter
@@ -33,6 +35,17 @@ public class Weapon {
 
 	@Column(name = "image_asset_key", length = 255)
 	private String imageAssetKey;
+
+	public void setObtainedFromStage(Stage stage) {
+		this.obtainedFromStage = stage;
+
+		if (stage != null) {
+			this.game = Objects.requireNonNull(
+					stage.getGame(),
+					"The stage must belong to a game before assigning it to a weapon"
+			);
+		}
+	}
 }
 
 

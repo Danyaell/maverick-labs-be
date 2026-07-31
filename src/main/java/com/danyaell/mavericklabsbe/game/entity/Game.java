@@ -40,4 +40,14 @@ public class Game {
         this.stages = stages;
         this.weapons = new ArrayList<>();
     }
+
+    public void addStage(Stage stage) {
+        stages.add(stage);
+        stage.setGame(this);
+    }
+
+    public void addWeapon(Weapon weapon) {
+        weapons.add(weapon);
+        weapon.setGame(this);
+    }
 }

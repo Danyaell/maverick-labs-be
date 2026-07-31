@@ -154,27 +154,42 @@ class RecommendationServiceTests {
 		assertThat(recommendations).isEmpty();
 	}
 
+	private final Game game = testGame();
+
 	private RouteAnalysisContext context(
 			List<Stage> orderedStages,
 			List<RouteWarningResponse> warnings,
 			Map<Long, Weapon> weaponsByStage,
 			Integer backtrackingScore
 	) {
-		Game game = new Game();
-		game.setCode("MMX");
-		return new RouteAnalysisContext(game, orderedStages, weaponsByStage, warnings, backtrackingScore);
+		return new RouteAnalysisContext(
+				game,
+				orderedStages,
+				weaponsByStage,
+				warnings,
+				backtrackingScore
+		);
 	}
 
-	private Stage stage(Long id, String slug, String bossName, String weaknessWeapon) {
+	private Stage stage(
+			Long id,
+			String slug,
+			String bossName,
+			String weaknessWeapon
+	) {
 		Stage stage = new Stage();
 		stage.setId(id);
+		stage.setGame(game);
 		stage.setSlug(slug);
 		stage.setName(bossName + " Stage");
+
 		Boss boss = new Boss();
 		boss.setSlug(slug);
 		boss.setName(bossName);
 		boss.setWeaknessWeapon(weaponReference(weaknessWeapon));
+
 		stage.setBoss(boss);
+
 		return stage;
 	}
 
@@ -202,5 +217,15 @@ class RecommendationServiceTests {
 
 	private Long weaponId(String slug) {
 		return 1_000L + Math.abs(slug.hashCode());
+	}
+
+	private Game testGame() {
+		Game game = new Game();
+		game.setId(1L);
+		game.setCode("MMX");
+		game.setTitle("Mega Man X");
+		game.setReleaseOrder(1);
+
+		return game;
 	}
 }

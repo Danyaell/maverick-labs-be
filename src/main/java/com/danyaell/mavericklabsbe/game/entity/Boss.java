@@ -2,6 +2,8 @@ package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "bosses")
 @lombok.Getter
@@ -14,16 +16,16 @@ public class Boss {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@lombok.Setter(lombok.AccessLevel.NONE)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "game_id", nullable = false)
 	private Game game;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(
 			name = "stage_id",
 			nullable = false,
-			unique = true,
-			foreignKey = @ForeignKey(name = "fk_boss_stage")
+			unique = true
 	)
 	private Stage stage;
 
@@ -39,5 +41,17 @@ public class Boss {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "weakness_weapon_id")
 	private Weapon weaknessWeapon;
+
+	public void setStage(Stage stage) {
+		this.stage = Objects.requireNonNull(
+				stage,
+				"A boss must belong to a stage"
+		);
+
+		this.game = Objects.requireNonNull(
+				stage.getGame(),
+				"The stage must belong to a game before assigning it to a boss"
+		);
+	}
 }
 

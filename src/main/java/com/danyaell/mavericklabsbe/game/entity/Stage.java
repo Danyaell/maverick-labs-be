@@ -44,4 +44,17 @@ public class Stage {
 
 	@OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Collectible> collectibles = new ArrayList<>();
+
+	public void setBoss(Boss boss) {
+		this.boss = boss;
+
+		if (boss != null) {
+			boss.setStage(this);
+		}
+	}
+
+	public void addCollectible(Collectible collectible) {
+		collectibles.add(collectible);
+		collectible.setStage(this);
+	}
 }

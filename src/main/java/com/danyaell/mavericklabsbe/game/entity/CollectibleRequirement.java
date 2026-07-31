@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Entity
 @Table(
 		name = "collectible_requirements",
@@ -34,15 +36,15 @@ public class CollectibleRequirement {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@lombok.Setter(lombok.AccessLevel.NONE)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "game_id", nullable = false)
 	private Game game;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(
 			name = "collectible_id",
-			nullable = false,
-			foreignKey = @ForeignKey(name = "fk_requirement_collectible")
+			nullable = false
 	)
 	private Collectible collectible;
 
@@ -64,4 +66,16 @@ public class CollectibleRequirement {
 
 	@Column(columnDefinition = "TEXT")
 	private String description;
+
+	public void setCollectible(Collectible collectible) {
+		this.collectible = Objects.requireNonNull(
+				collectible,
+				"A requirement must belong to a collectible"
+		);
+
+		this.game = Objects.requireNonNull(
+				collectible.getGame(),
+				"The collectible must belong to a game before assigning requirements"
+		);
+	}
 }
