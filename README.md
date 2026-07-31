@@ -113,7 +113,7 @@ During simulation, the service maintains three progression sets:
 
 A stage weapon becomes available after completing its provider stage. A collectible is considered obtainable only when all its modeled requirements are satisfied at that point in the route.
 
-For boss encounters, the stage's base difficulty is multiplied by `0.65` when the boss weakness has already been acquired. Otherwise, the full base difficulty is used. Missing collectible requirements add backtracking pressure, which is capped to a `0â€“100` score and contributes to the time and route-efficiency breakdown.
+For boss encounters, the stage's base difficulty is multiplied by `0.65` when the boss weakness has already been acquired. Otherwise, the full base difficulty is used. Missing collectible requirements add backtracking pressure, which is capped to a `0-100` score and contributes to the time and route-efficiency breakdown.
 
 ## Tech stack
 
@@ -403,10 +403,10 @@ Example response:
     }
   ],
   "breakdown": {
-    "baseDifficultyAverage": 67,
+    "baseDifficultyAverage": 65,
     "combatDifficulty": 47,
-    "weaknessReduction": 20,
-    "routeEfficiencyScore": 68,
+    "weaknessReduction": 18,
+    "routeEfficiencyScore": 66,
     "timePenaltyMinutes": 20
   },
   "recommendations": [
@@ -514,11 +514,11 @@ java -jar target/maverick-labs-be-0.0.1-SNAPSHOT.jar
 
 ## Configuration
 
-| Property / environment variable | Required | Default | Purpose |
-|---|:---:|--|---|
-|| `SPRING_DATASOURCE_URL` | Yes |  | JDBC URL for the MySQL database |
-| `SPRING_DATASOURCE_USERNAME` | Yes |  | Database username |
-| `SPRING_DATASOURCE_PASSWORD` | Yes |  | Database password | `SERVER_PORT` | No | `8080` | HTTP server port |
+| Property / environment variable | Required | Default                 | Purpose |
+|---|:---:|-------------------------|---|
+| `SPRING_DATASOURCE_URL` | Yes | -                       | JDBC URL for the MySQL database |
+| `SPRING_DATASOURCE_USERNAME` | Yes | -                       | Database username |
+| `SPRING_DATASOURCE_PASSWORD` | Yes | -                       | Database password | `SERVER_PORT` | No | `8080` | HTTP server port |
 | `APP_CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Allowed frontend origins; comma-separate multiple values when externally configured |
 
 Default CORS configuration permits the local Vite frontend at `http://localhost:5173`. Override allowed origins in deployed environments.

@@ -62,8 +62,9 @@ public class Collectible {
 	}
 
 	public void addRequirement(CollectibleRequirement requirement) {
-		requirements.add(requirement);
+		Objects.requireNonNull(requirement, "requirement is required");
 		requirement.setCollectible(this);
+		requirements.add(requirement);
 	}
 }
 
