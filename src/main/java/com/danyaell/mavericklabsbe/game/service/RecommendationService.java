@@ -46,69 +46,126 @@ public class RecommendationService {
 		return recommendations;
 	}
 
-	private List<RouteRecommendationResponse> buildBossOrderRecommendations(RouteAnalysisContext context) {
+	private List<RouteRecommendationResponse> buildBossOrderRecommendations(
+			RouteAnalysisContext context
+	) {
 		List<Stage> orderedStages = context.orderedStages();
-		Map<String, Integer> indexByStageSlug = new HashMap<>();
+
+		Map<Long, Integer> indexByStageId = new HashMap<>();
+
 		for (int i = 0; i < orderedStages.size(); i++) {
-			indexByStageSlug.put(orderedStages.get(i).getSlug(), i);
+			Stage stage = orderedStages.get(i);
+
+			if (stage.getId() != null) {
+				indexByStageId.put(stage.getId(), i);
+			}
 		}
 
-		Map<String, Weapon> weaponByProvider = context.weaponsByObtainedStageSlug();
-		Map<String, String> providerByWeaponSlug = weaponByProvider.values().stream()
-				.filter(weapon -> weapon.getObtainedFromStage() != null)
-				.collect(Collectors.toMap(
-						Weapon::getSlug,
-						weapon -> weapon.getObtainedFromStage().getSlug(),
-						(left, right) -> left
-				));
+		Map<Long, Weapon> weaponByProviderStageId =
+				context.weaponsByObtainedStageId();
 
-		List<RouteRecommendationResponse> recommendations = new ArrayList<>();
+		Map<Long, Long> providerStageIdByWeaponId =
+				weaponByProviderStageId.entrySet()
+						.stream()
+						.filter(entry -> entry.getKey() != null)
+						.filter(entry -> entry.getValue() != null)
+						.filter(entry -> entry.getValue().getId() != null)
+						.collect(Collectors.toMap(
+								entry -> entry.getValue().getId(),
+								Map.Entry::getKey,
+								(left, right) -> left
+						));
+
+		List<RouteRecommendationResponse> recommendations =
+				new ArrayList<>();
+
 		int positiveCount = 0;
 
 		for (Stage targetStage : orderedStages) {
 			Boss targetBoss = targetStage.getBoss();
-			if (targetBoss == null || targetBoss.getWeaknessWeapon() == null || targetBoss.getWeaknessWeapon().isBlank()) {
+
+			if (targetBoss == null) {
 				continue;
 			}
 
-			String providerStageSlug = providerByWeaponSlug.get(targetBoss.getWeaknessWeapon());
-			if (providerStageSlug == null || providerStageSlug.equals(targetStage.getSlug())) {
+			Weapon weaknessWeapon = targetBoss.getWeaknessWeapon();
+
+			if (weaknessWeapon == null || weaknessWeapon.getId() == null) {
 				continue;
 			}
 
-			Integer providerIndex = indexByStageSlug.get(providerStageSlug);
-			Integer targetIndex = indexByStageSlug.get(targetStage.getSlug());
+			Long providerStageId =
+					providerStageIdByWeaponId.get(weaknessWeapon.getId());
+
+			if (
+					providerStageId == null
+							|| providerStageId.equals(targetStage.getId())
+			) {
+				continue;
+			}
+
+			Integer providerIndex = indexByStageId.get(providerStageId);
+			Integer targetIndex = indexByStageId.get(targetStage.getId());
+
 			if (providerIndex == null || targetIndex == null) {
 				continue;
 			}
 
 			Stage providerStage = orderedStages.get(providerIndex);
-			String providerName = providerStage.getBoss() != null ? providerStage.getBoss().getName() : providerStage.getName();
+
+			String providerName = providerStage.getBoss() != null
+					? providerStage.getBoss().getName()
+					: providerStage.getName();
+
 			String targetName = targetBoss.getName();
-			Weapon providerWeapon = weaponByProvider.get(providerStageSlug);
-			String weaponName = providerWeapon != null ? providerWeapon.getName() : targetBoss.getWeaknessWeapon();
+			String weaponName = weaknessWeapon.getName();
 
 			if (providerIndex > targetIndex) {
-				String message = "Move %s before %s to reduce difficulty because %s gives you %s."
-						.formatted(providerName, targetName, providerName, weaponName);
-				recommendations.add(new RouteRecommendationResponse(
-						RecommendationType.BOSS_ORDER,
-						RecommendationSeverity.WARNING,
-						message,
-						List.of(providerStageSlug, targetStage.getSlug())
-				));
+				String message =
+						"Move %s before %s to reduce difficulty because %s gives you %s."
+								.formatted(
+										providerName,
+										targetName,
+										providerName,
+										weaponName
+								);
+
+				recommendations.add(
+						new RouteRecommendationResponse(
+								RecommendationType.BOSS_ORDER,
+								RecommendationSeverity.WARNING,
+								message,
+								List.of(
+										providerStage.getSlug(),
+										targetStage.getSlug()
+								)
+						)
+				);
+
 				continue;
 			}
 
 			if (positiveCount < MAX_POSITIVE_BOSS_ORDER) {
-				String message = "Good choice: %s before %s reduces difficulty because you get %s."
-						.formatted(providerName, targetName, weaponName);
-				recommendations.add(new RouteRecommendationResponse(
-						RecommendationType.BOSS_ORDER,
-						RecommendationSeverity.INFO,
-						message,
-						List.of(providerStageSlug, targetStage.getSlug())
-				));
+				String message =
+						"Good choice: %s before %s reduces difficulty because you get %s."
+								.formatted(
+										providerName,
+										targetName,
+										weaponName
+								);
+
+				recommendations.add(
+						new RouteRecommendationResponse(
+								RecommendationType.BOSS_ORDER,
+								RecommendationSeverity.INFO,
+								message,
+								List.of(
+										providerStage.getSlug(),
+										targetStage.getSlug()
+								)
+						)
+				);
+
 				positiveCount++;
 			}
 		}

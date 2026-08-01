@@ -1,26 +1,23 @@
 spring:
   application:
     name: maverick-labs-be
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
+
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
+    open-in-view: false
     show-sql: false
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: true
+
   sql:
     init:
-      mode: always
-      data-locations: classpath:data-test.sql
-      schema-locations: classpath:schema-test.sql
-
+      mode: never

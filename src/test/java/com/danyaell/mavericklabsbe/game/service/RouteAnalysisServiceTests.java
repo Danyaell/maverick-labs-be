@@ -98,7 +98,7 @@ class RouteAnalysisServiceTests {
 		Stage chillPenguin = stage(game, 1L, "chill-penguin", "Chill Penguin", 45, 12, "flame-wave");
 		Collectible collectible = collectible(chillPenguin, "spark-mandrill-sub-tank", "Sub Tank");
 		collectible.setRequirements(List.of(requirement(collectible, RequirementType.WEAPON, "electric-spark")));
-		chillPenguin.setCollectibles(List.of(collectible));
+		chillPenguin.addCollectible(collectible);
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
 		when(stageRepository.findByGameIdWithBossAndCollectibles(1L)).thenReturn(List.of(chillPenguin));
@@ -121,7 +121,7 @@ class RouteAnalysisServiceTests {
 		Stage sparkMandrill = stage(game, 2L, "spark-mandrill", "Spark Mandrill", 68, 16, "shotgun-ice");
 		Collectible collectible = collectible(sparkMandrill, "spark-mandrill-sub-tank", "Sub Tank");
 		collectible.setRequirements(List.of(requirement(collectible, RequirementType.WEAPON, "shotgun-ice")));
-		sparkMandrill.setCollectibles(List.of(collectible));
+		sparkMandrill.addCollectible(collectible);
 		Weapon shotgunIce = weapon(game, chillPenguin, "shotgun-ice", "Shotgun Ice");
 
 		when(gameRepository.findByCodeIgnoreCase("MMX")).thenReturn(Optional.of(game));
@@ -233,19 +233,19 @@ class RouteAnalysisServiceTests {
 		stage.setName(bossName + " Stage");
 		stage.setBaseDifficulty(baseDifficulty);
 		stage.setEstimatedMinutes(minutes);
-		stage.setCollectibles(List.of());
 
 		Boss boss = new Boss();
 		boss.setStage(stage);
 		boss.setSlug(slug);
 		boss.setName(bossName);
-		boss.setWeaknessWeapon(weaknessWeapon);
+		boss.setWeaknessWeapon(weaponReference(weaknessWeapon));
 		stage.setBoss(boss);
 		return stage;
 	}
 
 	private Weapon weapon(Game game, Stage stage, String slug, String name) {
 		Weapon weapon = new Weapon();
+		weapon.setId(weaponId(slug));
 		weapon.setGame(game);
 		weapon.setObtainedFromStage(stage);
 		weapon.setSlug(slug);
@@ -266,7 +266,23 @@ class RouteAnalysisServiceTests {
 		CollectibleRequirement requirement = new CollectibleRequirement();
 		requirement.setCollectible(collectible);
 		requirement.setRequirementType(type);
-		requirement.setRequiredKey(requiredKey);
+		requirement.setRequiredWeapon(weaponReference(requiredKey));
 		return requirement;
+	}
+
+	private Weapon weaponReference(String slug) {
+		if (slug == null || slug.isBlank()) {
+			return null;
+		}
+
+		Weapon weapon = new Weapon();
+		weapon.setId(weaponId(slug));
+		weapon.setSlug(slug);
+		weapon.setName(slug);
+		return weapon;
+	}
+
+	private Long weaponId(String slug) {
+		return 1_000L + Math.abs(slug.hashCode());
 	}
 }

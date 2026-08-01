@@ -5,17 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Global CORS configuration class.
- * This configuration class applies CORS settings globally to all endpoints.
- * The actual values are loaded from application.yaml and can be overridden
- * by environment-specific profiles (e.g., application-local.yaml)
- * Benefits of this approach:
- * - No hardcoded URLs in code
- * - Easy to change per environment without recompilation
- * - Centralized CORS configuration
- * - Follows Spring Boot best practices
- */
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
@@ -25,11 +14,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(corsProperties.getAllowedOrigins())
-                .allowedMethods(corsProperties.getAllowedMethods().split(","))
-                .allowedHeaders((corsProperties.getAllowedHeaders().equals("*") ? "*" : corsProperties.getAllowedHeaders().split(",")).toString())
-                .allowCredentials(corsProperties.getAllowCredentials())
+                .allowedOrigins(
+                        corsProperties.getAllowedOrigins().toArray(String[]::new)
+                )
+                .allowedMethods(
+                        corsProperties.getAllowedMethods().toArray(String[]::new)
+                )
+                .allowedHeaders(
+                        corsProperties.getAllowedHeaders().toArray(String[]::new)
+                )
+                .allowCredentials(corsProperties.isAllowCredentials())
                 .maxAge(corsProperties.getMaxAge());
     }
 }
-

@@ -11,9 +11,17 @@ import java.util.List;
 @Repository
 public interface CollectibleRepository extends JpaRepository<Collectible, Long> {
 
-    @Query("SELECT DISTINCT c FROM Collectible c " +
-            "LEFT JOIN FETCH c.requirements r " +
-            "WHERE c.stage.id IN :stageIds " +
-            "ORDER BY c.stage.id ASC, c.sortOrder ASC")
-    List<Collectible> findByStageIdInWithRequirements(@Param("stageIds") List<Long> stageIds);
+    @Query("""
+    SELECT DISTINCT c
+    FROM Collectible c
+    LEFT JOIN FETCH c.requirements requirement
+    LEFT JOIN FETCH requirement.requiredWeapon
+    LEFT JOIN FETCH requirement.requiredCollectible
+    LEFT JOIN FETCH requirement.requiredStage
+    WHERE c.stage.id IN :stageIds
+    ORDER BY c.stage.id ASC, c.sortOrder ASC
+    """)
+    List<Collectible> findByStageIdInWithRequirements(
+            @Param("stageIds") List<Long> stageIds
+    );
 }

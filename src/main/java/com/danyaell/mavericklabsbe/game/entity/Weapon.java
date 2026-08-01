@@ -2,6 +2,8 @@ package com.danyaell.mavericklabsbe.game.entity;
 
 import jakarta.persistence.*;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "weapons")
 @lombok.Getter
@@ -18,11 +20,11 @@ public class Weapon {
 	@JoinColumn(name = "game_id", nullable = false)
 	private Game game;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "obtained_from_stage_id")
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "obtained_from_stage_id", unique = true)
 	private Stage obtainedFromStage;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 100)
 	private String slug;
 
 	@Column(nullable = false)
@@ -31,8 +33,19 @@ public class Weapon {
 	@Column(columnDefinition = "TEXT")
 	private String description;
 
-	@Column(name = "image_asset_key")
+	@Column(name = "image_asset_key", length = 255)
 	private String imageAssetKey;
+
+	public void setObtainedFromStage(Stage stage) {
+		this.obtainedFromStage = stage;
+
+		if (stage != null) {
+			this.game = Objects.requireNonNull(
+					stage.getGame(),
+					"The stage must belong to a game before assigning it to a weapon"
+			);
+		}
+	}
 }
 
 

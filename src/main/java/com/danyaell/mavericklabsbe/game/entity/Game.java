@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "games")
@@ -16,7 +17,7 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, length = 50)
     private String code;
 
     @Column(nullable = false)
@@ -39,5 +40,17 @@ public class Game {
         this.releaseOrder = releaseOrder;
         this.stages = stages;
         this.weapons = new ArrayList<>();
+    }
+
+    public void addStage(Stage stage) {
+        Objects.requireNonNull(stage, "stage is required");
+        stage.setGame(this);
+        stages.add(stage);
+    }
+
+    public void addWeapon(Weapon weapon) {
+        Objects.requireNonNull(weapon, "weapon is required");
+        weapon.setGame(this);
+        weapons.add(weapon);
     }
 }

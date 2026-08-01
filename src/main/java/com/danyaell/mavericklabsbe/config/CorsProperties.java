@@ -1,21 +1,21 @@
 package com.danyaell.mavericklabsbe.config;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * CORS configuration properties loaded from application.yaml
- * This allows different CORS settings per environment (local, dev, prod)
- */
-@Data
+@Getter
+@Setter
 @Component
 @ConfigurationProperties(prefix = "app.cors")
 public class CorsProperties {
-    private String allowedOrigins;
-    private String allowedMethods;
-    private String allowedHeaders;
-    private Boolean allowCredentials;
-    private Long maxAge;
-}
 
+    private List<String> allowedOrigins = new ArrayList<>();
+    private List<String> allowedMethods = new ArrayList<>();
+    private List<String> allowedHeaders = new ArrayList<>();
+    private boolean allowCredentials;
+    private long maxAge;
+}

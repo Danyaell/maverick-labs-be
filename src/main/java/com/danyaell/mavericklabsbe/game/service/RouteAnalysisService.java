@@ -9,12 +9,14 @@ import com.danyaell.mavericklabsbe.game.repository.StageRepository;
 import com.danyaell.mavericklabsbe.game.repository.WeaponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RouteAnalysisService {
 
 	private final GameRepository gameRepository;
@@ -31,23 +33,32 @@ public class RouteAnalysisService {
 		Game game = gameRepository.findByCodeIgnoreCase(request.gameCode().trim())
 				.orElseThrow(() -> new ResourceNotFoundException("Game not found: " + request.gameCode()));
 
-		List<Stage> stages = stageRepository.findByGameIdWithBossAndCollectibles(game.getId());
-		preloadCollectibleRequirements(stages);
+		List<Stage> stages =
+				stageRepository.findByGameIdWithBossAndCollectibles(game.getId());
+
+		Map<Long, List<Collectible>> collectiblesByStageId =
+				loadCollectiblesWithRequirements(stages);
 		Map<String, Stage> stageBySlug = stages.stream()
 				.collect(Collectors.toMap(Stage::getSlug, stage -> stage));
 
 		validateRoute(request, stageBySlug, stages);
 
 		List<Weapon> weapons = weaponRepository.findByGameId(game.getId());
-		Map<String, Weapon> weaponsByStageSlug = weapons.stream()
+		Map<Long, Weapon> weaponsByStageId = weapons.stream()
+				.filter(weapon -> weapon.getId() != null)
 				.filter(weapon -> weapon.getObtainedFromStage() != null)
+				.filter(weapon -> weapon.getObtainedFromStage().getId() != null)
 				.collect(Collectors.toMap(
-						weapon -> weapon.getObtainedFromStage().getSlug(),
+						weapon -> weapon.getObtainedFromStage().getId(),
 						weapon -> weapon,
 						(left, right) -> left
 				));
-
-		SimulationResult simulation = simulate(request.stageOrder(), stageBySlug, weaponsByStageSlug);
+		SimulationResult simulation = simulate(
+				request.stageOrder(),
+				stageBySlug,
+				weaponsByStageId,
+				collectiblesByStageId
+		);
 		RouteBreakdownResponse breakdown = new RouteBreakdownResponse(
 				simulation.baseDifficultyAverage,
 				simulation.combatDifficulty,
@@ -58,8 +69,10 @@ public class RouteAnalysisService {
 
 		RouteAnalysisContext context = new RouteAnalysisContext(
 				game,
-				request.stageOrder().stream().map(stageBySlug::get).toList(),
-				weaponsByStageSlug,
+				request.stageOrder().stream()
+						.map(stageBySlug::get)
+						.toList(),
+				weaponsByStageId,
 				simulation.warnings,
 				simulation.backtrackingScore
 		);
@@ -96,42 +109,37 @@ public class RouteAnalysisService {
 		}
 	}
 
-	private void preloadCollectibleRequirements(List<Stage> stages) {
-		if (stages.isEmpty()) {
-			return;
-		}
-
+	private Map<Long, List<Collectible>> loadCollectiblesWithRequirements(
+			List<Stage> stages
+	) {
 		List<Long> stageIds = stages.stream()
 				.map(Stage::getId)
 				.filter(Objects::nonNull)
 				.toList();
 
 		if (stageIds.isEmpty()) {
-			return;
+			return Map.of();
 		}
 
-		Map<Long, List<Collectible>> collectiblesByStageId = collectibleRepository.findByStageIdInWithRequirements(stageIds)
+		return collectibleRepository
+				.findByStageIdInWithRequirements(stageIds)
 				.stream()
 				.collect(Collectors.groupingBy(
 						collectible -> collectible.getStage().getId(),
 						LinkedHashMap::new,
 						Collectors.toList()
 				));
-
-		for (Stage stage : stages) {
-			List<Collectible> collectibles = collectiblesByStageId.getOrDefault(stage.getId(), List.of());
-			stage.setCollectibles(new ArrayList<>(collectibles));
-		}
 	}
 
 	private SimulationResult simulate(
 			List<String> stageOrder,
 			Map<String, Stage> stageBySlug,
-			Map<String, Weapon> weaponsByStageSlug
+			Map<Long, Weapon> weaponsByStageId,
+			Map<Long, List<Collectible>> collectiblesByStageId
 	) {
-		Set<String> acquiredWeapons = new HashSet<>();
-		Set<String> acquiredCollectibles = new HashSet<>();
-		Set<String> visitedStages = new HashSet<>();
+		Set<Long> acquiredWeaponIds = new HashSet<>();
+		Set<Long> acquiredCollectibleIds = new HashSet<>();
+		Set<Long> visitedStageIds = new HashSet<>();
 		List<RouteWarningResponse> warnings = new ArrayList<>();
 
 		int difficultWithoutWeaknessCount = 0;
@@ -151,7 +159,10 @@ public class RouteAnalysisService {
 					? stage.getBaseDifficulty()
 					: DEFAULT_BASE_DIFFICULTY;
 			totalBaseDifficulty += baseDifficulty;
-			boolean weaknessAvailable = hasBossWeakness(stage.getBoss(), acquiredWeapons);
+			boolean weaknessAvailable = hasBossWeakness(
+					stage.getBoss(),
+					acquiredWeaponIds
+			);
 
 			double multiplier = weaknessAvailable ? WEAKNESS_MULTIPLIER : NO_WEAKNESS_MULTIPLIER;
 			totalEffectiveDifficulty += baseDifficulty * multiplier;
@@ -163,10 +174,21 @@ public class RouteAnalysisService {
 				difficultWithoutWeaknessCount++;
 			}
 
-			for (Collectible collectible : stage.getCollectibles()) {
+			List<Collectible> stageCollectibles =
+					collectiblesByStageId.getOrDefault(
+							stage.getId(),
+							List.of()
+					);
+
+			for (Collectible collectible : stageCollectibles) {
 				boolean blocked = false;
 				for (CollectibleRequirement requirement : collectible.getRequirements()) {
-					if (!isRequirementMet(requirement, acquiredWeapons, acquiredCollectibles, visitedStages)) {
+					if (!isRequirementMet(
+							requirement,
+							acquiredWeaponIds,
+							acquiredCollectibleIds,
+							visitedStageIds
+					)) {
 						blocked = true;
 						break;
 					}
@@ -183,13 +205,14 @@ public class RouteAnalysisService {
 					continue;
 				}
 
-				acquiredCollectibles.add(collectible.getSlug());
+				acquiredCollectibleIds.add(collectible.getId());
 			}
 
-			visitedStages.add(stage.getSlug());
-			Weapon obtainedWeapon = weaponsByStageSlug.get(stageSlug);
+			visitedStageIds.add(stage.getId());
+			Weapon obtainedWeapon = weaponsByStageId.get(stage.getId());
+
 			if (obtainedWeapon != null) {
-				acquiredWeapons.add(obtainedWeapon.getSlug());
+				acquiredWeaponIds.add(obtainedWeapon.getId());
 			}
 		}
 
@@ -218,23 +241,57 @@ public class RouteAnalysisService {
 		);
 	}
 
-	private boolean hasBossWeakness(Boss boss, Set<String> acquiredWeapons) {
-		if (boss == null || boss.getWeaknessWeapon() == null || boss.getWeaknessWeapon().isBlank()) {
+	private boolean hasBossWeakness(
+			Boss boss,
+			Set<Long> acquiredWeaponIds
+	) {
+		if (boss == null) {
 			return false;
 		}
-		return acquiredWeapons.contains(boss.getWeaknessWeapon());
+
+		Weapon weaknessWeapon = boss.getWeaknessWeapon();
+
+		if (weaknessWeapon == null || weaknessWeapon.getId() == null) {
+			return false;
+		}
+
+		return acquiredWeaponIds.contains(weaknessWeapon.getId());
 	}
 
 	private boolean isRequirementMet(
 			CollectibleRequirement requirement,
-			Set<String> acquiredWeapons,
-			Set<String> acquiredCollectibles,
-			Set<String> visitedStages
+			Set<Long> acquiredWeaponIds,
+			Set<Long> acquiredCollectibleIds,
+			Set<Long> visitedStageIds
 	) {
 		return switch (requirement.getRequirementType()) {
-			case WEAPON -> acquiredWeapons.contains(requirement.getRequiredKey());
-			case COLLECTIBLE -> acquiredCollectibles.contains(requirement.getRequiredKey());
-			case STAGE_CLEARED -> visitedStages.contains(requirement.getRequiredKey());
+			case WEAPON -> {
+				Weapon requiredWeapon = requirement.getRequiredWeapon();
+
+				yield requiredWeapon != null
+						&& requiredWeapon.getId() != null
+						&& acquiredWeaponIds.contains(requiredWeapon.getId());
+			}
+
+			case COLLECTIBLE -> {
+				Collectible requiredCollectible =
+						requirement.getRequiredCollectible();
+
+				yield requiredCollectible != null
+						&& requiredCollectible.getId() != null
+						&& acquiredCollectibleIds.contains(
+						requiredCollectible.getId()
+				);
+			}
+
+			case STAGE_CLEARED -> {
+				Stage requiredStage = requirement.getRequiredStage();
+
+				yield requiredStage != null
+						&& requiredStage.getId() != null
+						&& visitedStageIds.contains(requiredStage.getId());
+			}
+
 			case OTHER -> false;
 		};
 	}

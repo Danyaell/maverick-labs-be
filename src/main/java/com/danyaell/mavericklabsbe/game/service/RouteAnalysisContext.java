@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 public record RouteAnalysisContext(
-	Game game,
-	List<Stage> orderedStages,
-	Map<String, Weapon> weaponsByObtainedStageSlug,
-	List<RouteWarningResponse> warnings,
-	Integer backtrackingScore
+		Game game,
+		List<Stage> orderedStages,
+		Map<Long, Weapon> weaponsByObtainedStageId,
+		List<RouteWarningResponse> warnings,
+		Integer backtrackingScore
 ) {}
