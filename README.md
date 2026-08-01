@@ -1,5 +1,5 @@
 # Maverick Labs API
-
+[![Backend CI](https://github.com/Danyaell/maverick-labs-be/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Danyaell/maverick-labs-be/actions/workflows/ci.yml)
 > A data-driven backend for exploring Mega Man X game data, validating player-defined boss routes, estimating route difficulty, detecting backtracking, and generating actionable recommendations.
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk)
