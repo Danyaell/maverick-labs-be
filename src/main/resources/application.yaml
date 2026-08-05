@@ -1,6 +1,8 @@
 spring:
   application:
     name: maverick-labs-be
+  server:
+    port: ${PORT:8080}
   jpa:
     hibernate:
       ddl-auto: validate

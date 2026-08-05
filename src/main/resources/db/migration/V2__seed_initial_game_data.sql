@@ -382,7 +382,7 @@ INSERT INTO collectibles (
           'Leg Upgrade',
           'ARMOR_UPGRADE',
           'Unlocks dash movement and longer dash jumps.',
-          'mmx.collectible.leg-upgrade',
+          'mmx.collectible.armor-upgrade',
           1
       ),
       (
@@ -412,7 +412,7 @@ INSERT INTO collectibles (
           'Helmet Upgrade',
           'ARMOR_UPGRADE',
           'Allows X to break specific blocks with a headbutt.',
-          'mmx.collectible.helmet-upgrade',
+          'mmx.collectible.armor-upgrade',
           2
       ),
       (
@@ -452,7 +452,7 @@ INSERT INTO collectibles (
           'X-Buster Upgrade',
           'ARMOR_UPGRADE',
           'Unlocks a higher X-Buster charge level and charged special weapons.',
-          'mmx.collectible.x-buster-upgrade',
+          'mmx.collectible.armor-upgrade',
           3
       ),
       (
@@ -542,7 +542,7 @@ INSERT INTO collectibles (
           'Body Armor Upgrade',
           'ARMOR_UPGRADE',
           'Reduces damage taken by half.',
-          'mmx.collectible.body-armor-upgrade',
+          'mmx.collectible.armor-upgrade',
           2
       );
 
