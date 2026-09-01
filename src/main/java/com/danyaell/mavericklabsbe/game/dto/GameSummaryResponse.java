@@ -11,22 +11,12 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Summary of a game displayed in the Maverick Labs catalog.")
 public class GameSummaryResponse {
 
-    @Schema(
-            description = "Stable game code.",
-            example = "MMX"
-    )
+    @Schema(description = "Stable game code.", example = "MMX")
     private String code;
 
-    @Schema(
-            description = "Display title of the game.",
-            example = "Mega Man X"
-    )
+    @Schema(description = "Display title of the game.", example = "Mega Man X")
     private String title;
 
-    @Schema(
-            description = "Release position inside the main Mega Man X series.",
-            example = "1",
-            minimum = "1"
-    )
+    @Schema(description = "Release position inside the main Mega Man X series.", example = "1", minimum = "1")
     private Integer releaseOrder;
 }

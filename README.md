@@ -272,7 +272,7 @@ curl http://localhost:8080/api/v1/games
 
 ## API reference
 
-## Interactive API documentation
+### Interactive API documentation
 
 The running application publishes its HTTP contract automatically from the
 Spring MVC controllers and public DTOs.
@@ -288,7 +288,7 @@ Production documentation:
 - [Swagger UI](https://maverick-labs-be-production.up.railway.app/swagger-ui.html)
 - [OpenAPI JSON](https://maverick-labs-be-production.up.railway.app/v3/api-docs)
 
-Base URL:
+### Base URL:
 
 ```text
 http://localhost:8080/api/v1

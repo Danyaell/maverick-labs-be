@@ -29,4 +29,5 @@ public record WeaponResponse(
         )
         String imageAssetKey
 
-) {}
+) {
+}

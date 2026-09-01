@@ -42,4 +42,5 @@ public record CollectibleResponse(
         )
         Integer sortOrder
 
-) {}
+) {
+}
