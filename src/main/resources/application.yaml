@@ -1,8 +1,10 @@
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: maverick-labs-be
-  server:
-    port: ${PORT:8080}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -17,6 +19,22 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
     clean-disabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    version: openapi_3_1
+
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+  packages-to-scan:
+    - com.danyaell.mavericklabsbe.game.controller
+
+  paths-to-match:
+    - /api/v1/**
 
 # CORS Configuration
 app:
