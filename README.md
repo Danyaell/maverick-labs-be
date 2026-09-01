@@ -130,6 +130,7 @@ For boss encounters, the stage's base difficulty is multiplied by `0.65` when th
 | Unit testing | JUnit 5, Mockito, AssertJ |
 | HTTP contract testing | MockMvc |
 | Database integration testing | Testcontainers with MySQL 8.0.42 |
+| Documentation | OpenAPI 3.1, Swagger UI |
 
 ## Architecture
 
@@ -270,6 +271,22 @@ curl http://localhost:8080/api/v1/games
 ```
 
 ## API reference
+
+## Interactive API documentation
+
+The running application publishes its HTTP contract automatically from the
+Spring MVC controllers and public DTOs.
+
+| Resource | Local path |
+|---|---|
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| OpenAPI JSON | http://localhost:8080/v3/api-docs |
+| OpenAPI YAML | http://localhost:8080/v3/api-docs.yaml |
+
+Production documentation:
+
+- [Swagger UI](https://maverick-labs-be-production.up.railway.app/swagger-ui.html)
+- [OpenAPI JSON](https://maverick-labs-be-production.up.railway.app/v3/api-docs)
 
 Base URL:
 
@@ -579,7 +596,6 @@ src/
 - Support additional route goals and partial-route analysis.
 - Model alternative requirements with explicit `AND`/`OR` groups.
 - Expand recommendation rules and explain score contributions in greater detail.
-- Add OpenAPI/Swagger documentation.
 - Add continuous integration and deployment workflows.
 - Complete the route builder and analyzer experience in the companion frontend.
 
